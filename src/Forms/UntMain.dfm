@@ -2,6 +2,7 @@ object FrmMain: TFrmMain
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
+  BorderStyle = bsSingle
   Caption = 'Limpa DCU'
   ClientHeight = 442
   ClientWidth = 628
@@ -24,6 +25,9 @@ object FrmMain: TFrmMain
     Panels = <
       item
         Text = 'Vers'#227'o APL: 1.0.0.0'
+        Width = 125
+      end
+      item
         Width = 50
       end>
   end

@@ -49,6 +49,7 @@ var
 
 const
    STS_VERAPL = 0;
+   STS_PRJ    = 1;
 
 implementation
 
@@ -120,6 +121,7 @@ end;
 procedure TFrmMain.FormCreate(Sender: TObject);
 begin
    stsRodape.Panels[STS_VERAPL].Text := 'Versão APL: ' + VERSAO_APL;
+   stsRodape.Panels[STS_PRJ].Text    := 'Projeto atual: ';
    mmoLog.Lines.Clear;
 
    LimpaDcu := TLimpaDcu.Create;

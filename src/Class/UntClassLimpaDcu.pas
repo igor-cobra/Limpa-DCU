@@ -128,6 +128,7 @@ begin
          frmMain.cdsListaProj.First;
          while not frmMain.cdsListaProj.Eof do begin
             sDcuPath := frmMain.cdsListaProjCAMINHOPROJ.AsString;
+            frmMain.stsRodape.Panels[STS_PRJ].Text := 'Projeto atual: ' + frmMain.cdsListaProjNOMEPROJ.AsString;
             frmMain.mmoLog.Lines.Add('============================================================');
             frmMain.mmoLog.Lines.Add('Iniciando exclusão do projeto: ' + frmMain.cdsListaProjNOMEPROJ.AsString);
             frmMain.mmoLog.Lines.Add('============================================================');
@@ -152,9 +153,11 @@ begin
          end;
       finally
          sDcuFiles.Free;
+         frmMain.stsRodape.Panels[STS_PRJ].Text := 'Projeto atual: ';
          frmMain.mmoLog.Lines.Add('============================================================');
          frmMain.mmoLog.Lines.Add('Processo de exclusão dos DCUs concluído.');
          frmMain.mmoLog.Lines.Add('============================================================');
+         MsgInfo('Processo de exclusão dos DCUs concluído.');
       end;
    end;
 
