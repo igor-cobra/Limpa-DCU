@@ -13,6 +13,7 @@ object FrmMain: TFrmMain
   Font.Name = 'Segoe UI'
   Font.Style = []
   KeyPreview = True
+  Position = poScreenCenter
   OnCreate = FormCreate
   OnKeyDown = FormKeyDown
   OnShow = FormShow

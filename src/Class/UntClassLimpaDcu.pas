@@ -132,6 +132,7 @@ begin
             frmMain.mmoLog.Lines.Add('============================================================');
             frmMain.mmoLog.Lines.Add('Iniciando exclusão do projeto: ' + frmMain.cdsListaProjNOMEPROJ.AsString);
             frmMain.mmoLog.Lines.Add('============================================================');
+            Application.ProcessMessages;
 
             if DirectoryExists(sDcuPath) then begin
                // Localizar todos os arquivos .dcu na pasta
