@@ -50,6 +50,7 @@ procedure TLimpaDcu.CarregaProjetos;
 begin
    frmMain.cdsListaProj.Close;
    frmMain.cdsListaProj.CreateDataSet;
+   frmMain.cdsListaProj.DisableControls;
    Cnx.qryListaProj.Open;
    Cnx.qryListaProj.First;
    while not Cnx.qryListaProj.Eof do begin
@@ -63,6 +64,7 @@ begin
       Cnx.qryListaProj.Next;
    end;
    frmMain.cdsListaProj.First;
+   frmMain.cdsListaProj.EnableControls;
    Cnx.qryListaProj.Close;
 end;
 
@@ -75,7 +77,7 @@ constructor TLimpaDcu.Create;
 begin
    mmoLog := frmMain.mmoLog;
    Cnx    := TdtmCnx.Create(nil);
-   if not CheckDatabaseExists then Cnx.GeraEstruturaDB;
+   Cnx.GarantirEstruturaDB;
 end;
 
 destructor TLimpaDcu.Destroy;
@@ -85,23 +87,23 @@ end;
 
 procedure TLimpaDcu.Excluir;
 var
-   iCont: Integer;
    BookMark: TBookmark;
 begin
-   FiltraCds('SEL');
+   try
+      BookMark := FrmMain.cdsListaProj.Bookmark;
+      FiltraCds('SEL');
+      if (frmMain.cdsListaProj.RecordCount > 0) and (MsgYesNo('Gostaria de excluir os projetos selecionados?')) then begin
+         frmMain.cdsListaProj.First;
+         while not frmMain.cdsListaProj.Eof do begin
+            Cnx.DeleteProjeto(frmMain.cdsListaProjIDPROJETO.AsInteger);
 
-   if (frmMain.cdsListaProj.RecordCount > 0) and (MsgYesNo('Gostaria de excluir os projetos selecionados?')) then begin
-      frmMain.cdsListaProj.First;
-      while not frmMain.cdsListaProj.Eof do begin
-         Cnx.DeleteProjeto(frmMain.cdsListaProjIDPROJETO.AsInteger);
-
-         frmMain.cdsListaProj.Next;
+            frmMain.cdsListaProj.Next;
+         end;
       end;
-
+   finally
       FiltraCds('');
       CarregaProjetos;
-   end else begin
-      FiltraCds('SEL');
+      FrmMain.cdsListaProj.Bookmark := BookMark;
    end;
 end;
 

@@ -6,18 +6,18 @@ uses
    Winapi.Windows, Vcl.Forms, System.SysUtils, Winapi.Messages, System.Classes;
 
 var
-   VERSAO_APL       : string;
-   CAMINHO_APL      : string;
-   PASTA_CONF       : string;
-   PASTA_LOG        : string;
-   NOME_APL         : string;
-   CAMINHO_DB       : string;
-   PASTA_APL         : string;
+   VERSAO_APL  : string;
+   CAMINHO_APL : string;
+   PASTA_CONF  : string;
+   PASTA_LOG   : string;
+   NOME_APL    : string;
+   CAMINHO_DB  : string;
+   PASTA_STYLE : string;
 
 const
-   InputBoxMsg     = WM_USER + 123;
-   WC_MB_MSGYES    = 1;
-   WC_MB_MSGNO     = 2;
+   InputBoxMsg  = WM_USER + 123;
+   WC_MB_MSGYES = 1;
+   WC_MB_MSGNO  = 2;
 
 type
    TPasswordBoxHelper = class
@@ -46,7 +46,8 @@ function iif(condicao : boolean; verdadeiro, falso : variant):variant;
 implementation
 
 uses
-   System.Math, Vcl.StdCtrls, Vcl.Controls, System.IOUtils, System.StrUtils;
+   System.Math, Vcl.StdCtrls, Vcl.Controls, System.IOUtils, System.StrUtils,
+  UntTemaAplicacao;
 
 function VersaoApl: string;
 type
@@ -240,17 +241,19 @@ begin
    try
       Form.Position    := poScreenCenter;
       Form.Caption     := sCabecalho;
-      Form.Color       := $00FAF4E5;
+      Form.Color       := tTemaAplicacao.CorFundo;
+      Form.Font.Color  := tTemaAplicacao.CorTexto;
       Form.KeyPreview  := True;
       Form.BorderIcons := [biSystemMenu];
       Form.OnKeyDown   := FormKeyDown;
 
       // PromptLabel configurado para exibir o texto e alinhado ao centro
-      PromptLabel           := TLabel.Create(Form);
-      PromptLabel.Parent    := Form;
-      PromptLabel.Caption   := sTexto;
-      PromptLabel.WordWrap  := True;
-      PromptLabel.Alignment := taCenter;
+      PromptLabel            := TLabel.Create(Form);
+      PromptLabel.Parent     := Form;
+      PromptLabel.Caption    := sTexto;
+      PromptLabel.WordWrap   := True;
+      PromptLabel.Alignment  := taCenter;
+      PromptLabel.Font.Color := tTemaAplicacao.CorTexto;
 
       // Determinando a largura e altura baseada no conteúdo e na largura máxima desejada
       Form.Canvas.Font := PromptLabel.Font;
@@ -263,9 +266,11 @@ begin
       PromptLabel.SetBounds(20, 20, Form.ClientWidth - 40, TextHeight + 20);
 
       // Configuração do EditBox
-      EditBox        := TEdit.Create(Form);
-      EditBox.Parent := Form;
+      EditBox              := TEdit.Create(Form);
+      EditBox.Parent       := Form;
       EditBox.PasswordChar := '*';
+      EditBox.Color        := tTemaAplicacao.CorEdit;
+      EditBox.Font.Color   := tTemaAplicacao.CorTexto;
       EditBox.SetBounds(50, PromptLabel.Top + PromptLabel.Height + 10, Form.ClientWidth - 100, 21);
 
       // Configuração do OkButton

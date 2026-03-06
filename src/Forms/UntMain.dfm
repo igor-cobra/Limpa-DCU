@@ -26,7 +26,7 @@ object FrmMain: TFrmMain
     Panels = <
       item
         Text = 'Vers'#227'o APL: 1.0.0.0'
-        Width = 125
+        Width = 150
       end
       item
         Width = 50
@@ -36,119 +36,163 @@ object FrmMain: TFrmMain
     Left = 0
     Top = 0
     Width = 628
-    Height = 177
+    Height = 65
     Align = alTop
     BevelOuter = bvNone
     TabOrder = 1
-    object dbgListaProj: TDBGrid
-      Left = 0
-      Top = 0
-      Width = 628
-      Height = 145
-      Align = alTop
-      DataSource = dsListaProj
-      Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
-      ReadOnly = True
-      TabOrder = 0
-      TitleFont.Charset = DEFAULT_CHARSET
-      TitleFont.Color = clWindowText
-      TitleFont.Height = -12
-      TitleFont.Name = 'Segoe UI'
-      TitleFont.Style = []
-      OnCellClick = dbgListaProjCellClick
-      OnDrawColumnCell = dbgListaProjDrawColumnCell
-      OnTitleClick = dbgListaProjTitleClick
-      Columns = <
-        item
-          Expanded = False
-          FieldName = 'SEL'
-          Title.Caption = 'Sel'
-          Title.Font.Charset = DEFAULT_CHARSET
-          Title.Font.Color = clWindowText
-          Title.Font.Height = -12
-          Title.Font.Name = 'Segoe UI'
-          Title.Font.Style = [fsBold]
-          Width = 25
-          Visible = True
-        end
-        item
-          Expanded = False
-          FieldName = 'IDPROJETO'
-          Title.Caption = 'C'#243'digo'
-          Title.Font.Charset = DEFAULT_CHARSET
-          Title.Font.Color = clWindowText
-          Title.Font.Height = -12
-          Title.Font.Name = 'Segoe UI'
-          Title.Font.Style = [fsBold]
-          Visible = True
-        end
-        item
-          Expanded = False
-          FieldName = 'NOMEPROJ'
-          Title.Caption = 'Projeto'
-          Title.Font.Charset = DEFAULT_CHARSET
-          Title.Font.Color = clWindowText
-          Title.Font.Height = -12
-          Title.Font.Name = 'Segoe UI'
-          Title.Font.Style = [fsBold]
-          Width = 150
-          Visible = True
-        end
-        item
-          Expanded = False
-          FieldName = 'CAMINHOPROJ'
-          Title.Caption = 'Caminho'
-          Title.Font.Charset = DEFAULT_CHARSET
-          Title.Font.Color = clWindowText
-          Title.Font.Height = -12
-          Title.Font.Name = 'Segoe UI'
-          Title.Font.Style = [fsBold]
-          Width = 350
-          Visible = True
-        end>
+    object lblModoEscuro: TLabel
+      Left = 77
+      Top = 7
+      Width = 70
+      Height = 15
+      Caption = 'Modo Escuro'
     end
     object btnLimparDcu: TButton
-      Left = 544
-      Top = 149
+      Left = 549
+      Top = 34
       Width = 75
       Height = 25
       Caption = '&Limpar Dcu'#39's'
-      TabOrder = 1
+      TabOrder = 0
       OnClick = btnLimparDcuClick
     end
     object btnCadastrar: TButton
-      Left = 8
-      Top = 149
+      Left = 408
+      Top = 3
       Width = 105
       Height = 25
       Caption = '&Cadastrar Projeto'
-      TabOrder = 2
+      TabOrder = 1
       TabStop = False
       OnClick = btnCadastrarClick
     end
     object btnExcluirProjeto: TButton
-      Left = 119
-      Top = 149
+      Left = 519
+      Top = 3
       Width = 105
       Height = 25
       Caption = '&Excluir Projeto'
-      TabOrder = 3
+      TabOrder = 2
       TabStop = False
       OnClick = btnExcluirProjetoClick
     end
+    object tlgModoEscuro: TToggleSwitch
+      Left = 15
+      Top = 6
+      Width = 56
+      Height = 18
+      ShowStateCaption = False
+      TabOrder = 3
+      OnClick = tlgModoEscuroClick
+    end
   end
-  object mmoLog: TMemo
+  object dbgListaProj: TDBGrid
     Left = 0
-    Top = 177
+    Top = 65
     Width = 628
-    Height = 246
-    TabStop = False
+    Height = 191
     Align = alClient
-    Lines.Strings = (
-      'mmoLog')
+    DataSource = dsListaProj
+    Options = [dgTitles, dgIndicator, dgColumnResize, dgColLines, dgRowLines, dgTabs, dgRowSelect, dgConfirmDelete, dgCancelOnExit, dgTitleClick, dgTitleHotTrack]
     ReadOnly = True
-    ScrollBars = ssVertical
     TabOrder = 2
+    TitleFont.Charset = DEFAULT_CHARSET
+    TitleFont.Color = clWindowText
+    TitleFont.Height = -12
+    TitleFont.Name = 'Segoe UI'
+    TitleFont.Style = []
+    OnCellClick = dbgListaProjCellClick
+    OnDrawColumnCell = dbgListaProjDrawColumnCell
+    OnTitleClick = dbgListaProjTitleClick
+    Columns = <
+      item
+        Expanded = False
+        FieldName = 'SEL'
+        Title.Caption = 'Sel'
+        Title.Font.Charset = DEFAULT_CHARSET
+        Title.Font.Color = clWindowText
+        Title.Font.Height = -12
+        Title.Font.Name = 'Segoe UI'
+        Title.Font.Style = [fsBold]
+        Width = 25
+        Visible = True
+      end
+      item
+        Expanded = False
+        FieldName = 'IDPROJETO'
+        Title.Caption = 'C'#243'digo'
+        Title.Font.Charset = DEFAULT_CHARSET
+        Title.Font.Color = clWindowText
+        Title.Font.Height = -12
+        Title.Font.Name = 'Segoe UI'
+        Title.Font.Style = [fsBold]
+        Visible = True
+      end
+      item
+        Expanded = False
+        FieldName = 'NOMEPROJ'
+        Title.Caption = 'Projeto'
+        Title.Font.Charset = DEFAULT_CHARSET
+        Title.Font.Color = clWindowText
+        Title.Font.Height = -12
+        Title.Font.Name = 'Segoe UI'
+        Title.Font.Style = [fsBold]
+        Width = 150
+        Visible = True
+      end
+      item
+        Expanded = False
+        FieldName = 'CAMINHOPROJ'
+        Title.Caption = 'Caminho'
+        Title.Font.Charset = DEFAULT_CHARSET
+        Title.Font.Color = clWindowText
+        Title.Font.Height = -12
+        Title.Font.Name = 'Segoe UI'
+        Title.Font.Style = [fsBold]
+        Width = 350
+        Visible = True
+      end>
+  end
+  object pnlBottom: TPanel
+    Left = 0
+    Top = 256
+    Width = 628
+    Height = 167
+    Align = alBottom
+    Caption = 'pnlBottom'
+    TabOrder = 3
+    object lblLogRegistros: TLabel
+      Left = 1
+      Top = 1
+      Width = 626
+      Height = 21
+      Align = alTop
+      Caption = 'Log de registros'
+      Font.Charset = DEFAULT_CHARSET
+      Font.Color = clWindowText
+      Font.Height = -16
+      Font.Name = 'Segoe UI'
+      Font.Style = [fsBold]
+      ParentFont = False
+      ExplicitWidth = 121
+    end
+    object mmoLog: TMemo
+      Left = 1
+      Top = 22
+      Width = 626
+      Height = 144
+      TabStop = False
+      Align = alClient
+      Lines.Strings = (
+        'mmoLog')
+      ReadOnly = True
+      ScrollBars = ssVertical
+      TabOrder = 0
+      ExplicitLeft = 0
+      ExplicitTop = 256
+      ExplicitWidth = 628
+      ExplicitHeight = 167
+    end
   end
   object dsListaProj: TDataSource
     DataSet = cdsListaProj

@@ -10,6 +10,7 @@ object FrmCdsProj0: TFrmCdsProj0
   Font.Height = -12
   Font.Name = 'Segoe UI'
   Font.Style = []
+  Position = poMainFormCenter
   OnCreate = FormCreate
   TextHeight = 15
   object lblNomeProjeto: TLabel

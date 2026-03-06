@@ -82,3 +82,5 @@ fp.cfg
 fp.dsk
 
 # End of https://www.toptal.com/developers/gitignore/api/delphi,freepascal
+*.db
+*.vsf

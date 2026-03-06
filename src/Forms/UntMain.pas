@@ -3,20 +3,19 @@ unit UntMain;
 interface
 
 uses
-  Winapi.Windows, Winapi.Messages, System.SysUtils, System.Variants, System.Classes, Vcl.Graphics,
+  Winapi.Windows, System.Variants, System.Classes, Vcl.Graphics,
   Vcl.Controls, Vcl.Forms, Vcl.Dialogs, Vcl.ComCtrls, UntClassLimpaDcu,
-  Data.DB, Vcl.Grids, Vcl.DBGrids, UntDtmCnx, Vcl.StdCtrls, Vcl.ExtCtrls,
+  Data.DB, Vcl.Grids, Vcl.DBGrids, Vcl.StdCtrls, Vcl.ExtCtrls,
   FireDAC.Stan.Intf, FireDAC.Stan.Option, FireDAC.Stan.Param,
   FireDAC.Stan.Error, FireDAC.DatS, FireDAC.Phys.Intf, FireDAC.DApt.Intf,
   FireDAC.Stan.Async, FireDAC.DApt, FireDAC.Comp.DataSet,
-  FireDAC.Comp.Client;
+  FireDAC.Comp.Client, Vcl.WinXCtrls;
 
 type
   TAuxDBGrid = class(TDBGrid);
 
   TFrmMain = class(TForm)
     stsRodape: TStatusBar;
-    dbgListaProj: TDBGrid;
     dsListaProj: TDataSource;
     pnlTop: TPanel;
     btnLimparDcu: TButton;
@@ -28,6 +27,11 @@ type
     cdsListaProjIDPROJETO: TIntegerField;
     cdsListaProjNOMEPROJ: TStringField;
     cdsListaProjCAMINHOPROJ: TStringField;
+    dbgListaProj: TDBGrid;
+    pnlBottom: TPanel;
+    lblLogRegistros: TLabel;
+    tlgModoEscuro: TToggleSwitch;
+    lblModoEscuro: TLabel;
     procedure FormCreate(Sender: TObject);
     procedure FormShow(Sender: TObject);
     procedure btnCadastrarClick(Sender: TObject);
@@ -35,11 +39,13 @@ type
     procedure btnLimparDcuClick(Sender: TObject);
     procedure dbgListaProjDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
     procedure dbgListaProjCellClick(Column: TColumn);
-    procedure FormKeyDown(Sender: TObject; var Key: Word;
-      Shift: TShiftState);
+    procedure FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
     procedure dbgListaProjTitleClick(Column: TColumn);
+    procedure tlgModoEscuroClick(Sender: TObject);
   private
     LimpaDcu: TLimpaDcu;
+    procedure AtualizarEstadoControleTema;
+    procedure AplicarTemaTela;
   public
     { Public declarations }
   end;
@@ -54,9 +60,39 @@ const
 implementation
 
 uses
-  UntLib;
+  UntLib, UntTemaAplicacao;
 
 {$R *.dfm}
+
+procedure TFrmMain.AplicarTemaTela;
+begin
+   Color := tTemaAplicacao.CorFundo;
+   Font.Color := tTemaAplicacao.CorTexto;
+
+   pnlTop.ParentBackground := False;
+   pnlTop.Color := tTemaAplicacao.CorFundo;
+
+   mmoLog.Color := tTemaAplicacao.CorEdit;
+   mmoLog.Font.Color := tTemaAplicacao.CorTexto;
+
+   if Assigned(lblModoEscuro) then begin
+      lblModoEscuro.Font.Color := tTemaAplicacao.CorTexto;
+   end;
+
+   dbgListaProj.Invalidate;
+   mmoLog.Invalidate;
+   pnlTop.Invalidate;
+   Invalidate;
+end;
+
+procedure TFrmMain.AtualizarEstadoControleTema;
+begin
+   if tTemaAplicacao.TemaEscuro then begin
+      tlgModoEscuro.State := tssOn;
+   end else begin
+      tlgModoEscuro.State := tssOff;
+   end;
+end;
 
 procedure TFrmMain.btnCadastrarClick(Sender: TObject);
 begin
@@ -79,37 +115,25 @@ begin
 end;
 
 procedure TFrmMain.dbgListaProjDrawColumnCell(Sender: TObject; const Rect: TRect; DataCol: Integer; Column: TColumn; State: TGridDrawState);
-const
-   CtrlState : array [Boolean] of Integer = (DFCS_BUTTONCHECK, DFCS_BUTTONCHECK or DFCS_CHECKED);
 var
-	DBGrid: TDBGrid;
+   aGrid: TDBGrid;
    bLinhaSelecionada: Boolean;
-   cbkRect : TRect;
+   bNroLinhaPar: Boolean;
+   bHabilitado: Boolean;
 begin
-   DBGrid            := TDBGrid(Sender);
-   bLinhaSelecionada := (TAuxDBGrid(DBGrid).DataLink.ActiveRecord + 1 = TAuxDBGrid(DBGrid).Row) or (gdSelected in State);
+   aGrid := TDBGrid(Sender);
+   bLinhaSelecionada := (TAuxDBGrid(aGrid).DataLink.ActiveRecord + 1 = TAuxDBGrid(aGrid).Row)
+                        or (gdSelected in State);
+   bNroLinhaPar     := aGrid.DataSource.DataSet.RecNo mod 2 = 0;
 
-   if bLinhaSelecionada then begin
-      DBGrid.Canvas.Brush.Color := clSkyBlue;
-      DBGrid.Canvas.Font.Color:= clBlack;
-   end else begin
-      // Aplica listrado: cor alternada nas linhas
-    	if DBGrid.DataSource.DataSet.RecNo mod 2 = 0 then begin
-      	DBGrid.Canvas.Brush.Color := $00E0E0E0;  // cor mais clara
-    	end else begin
-      	DBGrid.Canvas.Brush.Color := clWhite;   // cor normal
-      end;
-   end;
-
-   DBGrid.DefaultDrawDataCell(Rect, DBGrid.columns[datacol].field, State);
+   tTemaAplicacao.PrepararCanvasGrid(aGrid.Canvas, bLinhaSelecionada, bNroLinhaPar);
+   aGrid.Canvas.FillRect(Rect);
 
    if Column.Field.DataType = ftBoolean then begin
-      DBGrid.Canvas.FillRect(Rect);
-      cbkRect.Left := Rect.Left + 2;
-      cbkRect.Right := Rect.Right - 2;
-      cbkRect.Top := Rect.Top + 2;
-      cbkRect.Bottom := Rect.Bottom - 2;
-      DrawFrameControl(DBGrid.Canvas.Handle, cbkRect, DFC_BUTTON, CtrlState[Column.Field.AsBoolean]);
+      bHabilitado := aGrid.Enabled and Column.Field.CanModify;
+      tTemaAplicacao.DesenharCheckBoxGrid(aGrid.Canvas, Rect, Column.Field.AsBoolean, bHabilitado);
+   end else begin
+      aGrid.DefaultDrawColumnCell(Rect, DataCol, Column, State);
    end;
 end;
 
@@ -125,6 +149,9 @@ begin
    mmoLog.Lines.Clear;
 
    LimpaDcu := TLimpaDcu.Create;
+
+   AtualizarEstadoControleTema;
+   AplicarTemaTela;
 end;
 
 procedure TFrmMain.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);
@@ -141,6 +168,18 @@ end;
 procedure TFrmMain.FormShow(Sender: TObject);
 begin
    LimpaDcu.CarregaProjetos;
+end;
+
+procedure TFrmMain.tlgModoEscuroClick(Sender: TObject);
+begin
+   if tlgModoEscuro.State = tssOn then begin
+      tTemaAplicacao.Aplicar(mtEscuro, True);
+   end else begin
+      tTemaAplicacao.Aplicar(mtClaro, True);
+   end;
+
+   AplicarTemaTela;
+   AtualizarEstadoControleTema;
 end;
 
 end.

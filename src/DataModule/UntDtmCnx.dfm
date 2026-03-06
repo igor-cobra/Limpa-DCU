@@ -1,5 +1,5 @@
 object dtmCnx: TdtmCnx
-  Height = 321
+  Height = 228
   Width = 542
   object cnxDatabase: TFDConnection
     Params.Strings = (
@@ -10,51 +10,6 @@ object dtmCnx: TdtmCnx
     LoginPrompt = False
     Left = 40
     Top = 16
-  end
-  object qryTabelaListaProj: TFDQuery
-    Connection = cnxDatabase
-    SQL.Strings = (
-      'CREATE TABLE TBLCDSPROJ0 ('
-      '    IDPROJETO INTEGER PRIMARY KEY AUTOINCREMENT,'
-      '    NOMEPROJ TEXT NOT NULL,'
-      '    CAMINHOPROJ TEXT NOT NULL'
-      ');')
-    Left = 40
-    Top = 80
-  end
-  object qryDeleteProj: TFDQuery
-    Connection = cnxDatabase
-    SQL.Strings = (
-      'DELETE FROM TBLCDSPROJ0'
-      'WHERE IDPROJETO = :IDPROJETO;')
-    Left = 40
-    Top = 192
-    ParamData = <
-      item
-        Name = 'IDPROJETO'
-        DataType = ftInteger
-        ParamType = ptInput
-      end>
-  end
-  object qryCadastrarProj: TFDQuery
-    Connection = cnxDatabase
-    SQL.Strings = (
-      'INSERT INTO TBLCDSPROJ0 (NOMEPROJ, CAMINHOPROJ)'
-      'VALUES (:NOMEPROJ, :CAMINHOPROJ);'
-      '')
-    Left = 40
-    Top = 248
-    ParamData = <
-      item
-        Name = 'NOMEPROJ'
-        DataType = ftString
-        ParamType = ptInput
-      end
-      item
-        Name = 'CAMINHOPROJ'
-        DataType = ftString
-        ParamType = ptInput
-      end>
   end
   object qryListaProj: TFDQuery
     Connection = cnxDatabase
@@ -67,7 +22,7 @@ object dtmCnx: TdtmCnx
       'ORDER BY'
       '   IDPROJETO')
     Left = 40
-    Top = 136
+    Top = 88
     object qryListaProjIDPROJETO: TFDAutoIncField
       FieldName = 'IDPROJETO'
       Origin = 'IDPROJETO'
