@@ -1,55 +1,74 @@
 # Delphi DCU Cleaner
 
-Este projeto foi desenvolvido em Delphi com o objetivo de **agilizar a limpeza de arquivos `.dcu`** (Delphi Compiled Units) gerados em grandes projetos Delphi, principalmente em ambientes com múltiplos módulos e diretórios.
+Utilitário desktop desenvolvido em Delphi para **agilizar a limpeza de arquivos `.dcu`** (Delphi Compiled Units) em projetos grandes, legados ou com múltiplos módulos e diretórios.
 
 ## 🧹 Objetivo
 
-Durante o desenvolvimento em Delphi, especialmente em projetos grandes, é comum a geração excessiva de arquivos `.dcu`, que podem gerar conflitos, erros de compilação. Este utilitário permite remover rapidamente esses arquivos de forma segura e automatizada.
+Em projetos Delphi de médio e grande porte, o acúmulo de arquivos `.dcu` pode causar conflitos, comportamentos inesperados e problemas de compilação. Este utilitário foi criado para simplificar esse processo, permitindo a remoção rápida e controlada desses arquivos.
+
+## ✨ Funcionalidades
+
+- Cadastro de projetos e caminhos de varredura.
+- Varredura recursiva de diretórios.
+- Exclusão automatizada de arquivos `.dcu`.
+- Interface simples e objetiva.
+- Persistência de preferências do usuário.
+- Suporte a tema claro e escuro.
 
 ## 🛠️ Tecnologias Utilizadas
 
-- **Delphi** (versão compatível com a sua base de desenvolvimento)
+- **Delphi / Object Pascal**
 - **VCL** para a interface visual
-- **FireDAC** para acesso a dados (caso necessário para log ou controle)
+- **FireDAC** para acesso ao banco local de configurações e dados
+- **SQLite** para persistência local
 
 ## 📂 Estrutura do Projeto
 
-- `UntMain.pas`: Formulário principal da aplicação, responsável pela interface e interação com o usuário.
-- `UntClassLimpaDcu.pas`: Classe principal que implementa a lógica de limpeza de arquivos `.dcu`.
-- `UntCdsProj0.pas`: Gerencia os datasets dos projetos e módulos que serão varridos.
-- `UntDtmCnx.pas`: Contém a estrutura de conexão com banco de dados usando FireDAC.
-- `UntLib.pas`: Funções auxiliares usadas no processo de varredura e exclusão.
+- `UntMain.pas`: formulário principal da aplicação.
+- `UntClassLimpaDcu.pas`: regra principal da limpeza dos arquivos `.dcu`.
+- `UntCdsProj0.pas`: controle dos datasets de projetos cadastrados.
+- `UntDtmCnx.pas`: data module com conexão e estrutura do banco local.
+- `UntLib.pas`: funções auxiliares do projeto.
+- `UntTemaAplicacao.pas`: centralização de tema, estilos visuais e persistência da preferência do usuário.
 
 ## ⚙️ Como Usar
 
-1. Execute o aplicativo.
-2. Cadastre novos projetos informando o diretório raiz (caso necessário).
-3. Selecione o(s) projetos que deseja fazer a limpeza.
-4. Inicie o processo.
-4. O sistema irá varrer recursivamente os diretórios em busca de arquivos `.dcu` e listá-los durante o processo de exclusão.
 1. Compile o projeto no Delphi.
+2. Execute o aplicativo.
+3. Cadastre um ou mais projetos informando o diretório raiz.
+4. Selecione os projetos desejados.
+5. Inicie a limpeza.
+6. Acompanhe o log da aplicação durante o processo.
 
-## 🚀 Funcionalidades
+## 🎨 Temas e arquivos `.vsf`
 
-- Varredura recursiva de diretórios.
-- Listagem dos arquivos a serem removidos.
-- Interface simples e objetiva.
+- Os arquivos `.vsf` utilizados por este projeto **não foram incluídos neste repositório**. Como os estilos atualmente adotados podem ser obtidos a partir do ecossistema do Delphi / RAD Studio, optou-se por **não versioná-los publicamente** junto ao código-fonte.
+- O projeto foi implementado de forma a **priorizar primeiro os recursos disponíveis no próprio ambiente Delphi**, reaproveitando o comportamento padrão do sistema de estilos da plataforma. Ainda assim, por **medida de segurança e previsibilidade na distribuição**, também é suportado o carregamento dos arquivos `.vsf` externos pela pasta `styles`, localizada ao lado do executável.
+- Essa abordagem foi adotada para evitar dependência exclusiva da configuração local de cada máquina de desenvolvimento, garantindo que a aplicação possa encontrar exatamente os estilos esperados em ambiente de teste, homologação e produção.
+- Os arquivos podem ser posicionados na seguinte estrutura:
+
+  ```text
+  styles\
+    AquaLightSlate.vsf
+    Glow.vsf
+  ```
 
 ## 📌 Observações
 
-- É **altamente recomendado realizar um backup** antes de qualquer operação de limpeza.
-- Este utilitário **não afeta arquivos `.pas`, `.dfm`, `.bpl` ou executáveis**.
+- É **altamente recomendado realizar backup** antes de executar limpezas em massa.
+- O utilitário foi projetado para atuar sobre arquivos `.dcu`.
+- Revise cuidadosamente qualquer personalização local antes de executar o processo em diretórios compartilhados.
 
 ## 📜 Licença
 
-Este projeto está licenciado sob os termos da **GNU General Public License v3.0 (GPLv3)**.  
-Você pode consultar os detalhes da licença no arquivo [LICENSE](LICENSE) ou no site oficial:  
-[https://www.gnu.org/licenses/gpl-3.0.html](https://www.gnu.org/licenses/gpl-3.0.html)
+Este projeto está licenciado sob os termos da **MIT License**.
+
+Consulte o arquivo [`LICENSE_MIT.txt`](LICENSE_MIT.txt) para o texto completo da licença.
 
 ## 🤝 Contribuições
 
-Contribuições são bem-vindas! Sinta-se livre para abrir issues ou enviar pull requests com melhorias, correções ou sugestões.
+Contribuições são bem-vindas. Sinta-se à vontade para abrir issues ou enviar pull requests com melhorias, correções e sugestões.
 
 ---
 
-> Desenvolvido para facilitar o dia a dia de quem lida com grandes projetos Delphi. 🚀
+> Desenvolvido para facilitar o dia a dia de quem lida com grandes projetos Delphi.
