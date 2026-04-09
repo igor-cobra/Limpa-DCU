@@ -39,7 +39,7 @@ procedure ClearMemory;
 function IsSelectQuery(const sSql: string): Boolean;
 function GetKeywordPosition(const sString, Keyword: string): Integer;
 function ObterProximoNumeroArquivo(const sCaminho, sExtencao: string; const sPrefixos: array of string): Integer;
-procedure SetLibraryPath(sCaminhoApl: string);
+procedure SetLibraryPath(sCaminhoLib: string);
 function CheckAppRunning(sAplName: string): Boolean;
 function iif(condicao : boolean; verdadeiro, falso : variant):variant;
 
@@ -47,7 +47,7 @@ implementation
 
 uses
    System.Math, Vcl.StdCtrls, Vcl.Controls, System.IOUtils, System.StrUtils,
-  UntTemaAplicacao;
+  UntTemaAplicacao, UntClassDialogos;
 
 function VersaoApl: string;
 type
@@ -89,7 +89,8 @@ begin
    end else begin
       msg := sCabecalho;
    end;
-   Application.MessageBox(pchar(sTexto), pchar(msg), MB_ICONWARNING + MB_OK);
+   //Application.MessageBox(pchar(sTexto), pchar(msg), MB_ICONWARNING + MB_OK);
+   tDialogos.Aviso(sTexto, sCabecalho);
 end;
 
 procedure MsgErro(sTexto, sCabecalho: string);
@@ -101,7 +102,8 @@ begin
    end else begin
       msg := sCabecalho;
    end;
-   Application.MessageBox(pchar(sTexto), pchar(msg), MB_ICONERROR + MB_OK);
+   //Application.MessageBox(pchar(sTexto), pchar(msg), MB_ICONERROR + MB_OK);
+   tDialogos.Erro(sTexto, sCabecalho);
 end;
 
 procedure MsgInfo(sTexto, sCabecalho: string);
@@ -113,7 +115,8 @@ begin
    end else begin
       msg := sCabecalho;
    end;
-   Application.MessageBox(pchar(sTexto), pchar(sCabecalho), MB_ICONINFORMATION + MB_OK);
+   //Application.MessageBox(pchar(sTexto), pchar(sCabecalho), MB_ICONINFORMATION + MB_OK);
+   tDialogos.Informacao(sTexto, sCabecalho);
 end;
 
 function MsgYesNo(sTexto, sCabecalho: string; iBotaoDefault: Integer): boolean;
@@ -125,11 +128,12 @@ begin
    end else begin
       msg := sCabecalho;
    end;
-   if (iBotaoDefault = WC_MB_MSGYES) then begin
-      Result := Application.MessageBox(pchar(sTexto), pchar(sCabecalho), MB_ICONQUESTION + MB_YESNO + MB_DEFBUTTON1) = IDYES;
-   end else begin
-      Result := Application.MessageBox(pchar(sTexto), pchar(sCabecalho), MB_ICONQUESTION + MB_YESNO + MB_DEFBUTTON2) = IDYES;
-   end;
+//   if (iBotaoDefault = WC_MB_MSGYES) then begin
+//      Result := Application.MessageBox(pchar(sTexto), pchar(sCabecalho), MB_ICONQUESTION + MB_YESNO + MB_DEFBUTTON1) = IDYES;
+//   end else begin
+//      Result := Application.MessageBox(pchar(sTexto), pchar(sCabecalho), MB_ICONQUESTION + MB_YESNO + MB_DEFBUTTON2) = IDYES;
+//   end;
+   Result := tDialogos.Confirmar(sTexto, sCabecalho, iBotaoDefault);
 end;
 
 function PasswordBox(sCabecalho, sTexto: string): string;
@@ -295,12 +299,12 @@ begin
    Result := sResult;
 end;
 
-procedure SetLibraryPath(sCaminhoApl: string);
+procedure SetLibraryPath(sCaminhoLib: string);
 var
    sLibPath: string;
 begin
    // Obter o caminho completo para a pasta 'lib'
-   sLibPath := sCaminhoApl + 'lib';
+   sLibPath := IncludeTrailingPathDelimiter(sCaminhoLib);
 
    // Configurar o diretório de pesquisa de DLLs para incluir a pasta 'lib'
    if not SetDllDirectory(PChar(sLibPath)) then begin
@@ -322,7 +326,8 @@ begin
    // Verifica se o Mutex já existe
    if (tMutexHandle = 0) or (GetLastError = ERROR_ALREADY_EXISTS) then begin
       // Exibe uma mensagem informando que o programa já está em execução
-      MsgWarning('A aplicação já está em execução!');
+      //MsgWarning('A aplicação já está em execução!');
+      tDialogos.AplicacaoJaEmExecucao;
       bResult := False;
    end;
 

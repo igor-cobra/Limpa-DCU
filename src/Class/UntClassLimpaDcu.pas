@@ -26,7 +26,8 @@ type
 implementation
 
 uses
-   UntLib, UntMain, Data.DB, UntCdsProj0, Vcl.Forms, System.IOUtils;
+   UntLib, UntMain, Data.DB, UntCdsProj0, Vcl.Forms, System.IOUtils,
+  UntClassDialogos;
 
 { TLimpaDcu }
 
@@ -87,23 +88,27 @@ end;
 
 procedure TLimpaDcu.Excluir;
 var
-   BookMark: TBookmark;
+   bTemSelecionado: Boolean;
 begin
+   FiltraCds('SEL');
+   bTemSelecionado := frmMain.cdsListaProj.RecordCount > 0;
    try
-      BookMark := FrmMain.cdsListaProj.Bookmark;
-      FiltraCds('SEL');
-      if (frmMain.cdsListaProj.RecordCount > 0) and (MsgYesNo('Gostaria de excluir os projetos selecionados?')) then begin
-         frmMain.cdsListaProj.First;
-         while not frmMain.cdsListaProj.Eof do begin
-            Cnx.DeleteProjeto(frmMain.cdsListaProjIDPROJETO.AsInteger);
-
-            frmMain.cdsListaProj.Next;
+      if not bTemSelecionado then begin
+         tDialogos.NenhumProjetoSelecionado('excluir');
+      end else begin
+         if tDialogos.Confirmar('Gostaria de excluir os projetos selecionados?', 'Excluir projetos', WC_MB_MSGNO) then begin
+            frmMain.cdsListaProj.First;
+            while not frmMain.cdsListaProj.Eof do begin
+               Cnx.DeleteProjeto(frmMain.cdsListaProjIDPROJETO.AsInteger);
+               frmMain.cdsListaProj.Next;
+            end;
+            tDialogos.Informacao('Os projetos selecionados foram excluídos com sucesso.', 'Exclusão concluída');
          end;
       end;
    finally
       FiltraCds('');
       CarregaProjetos;
-      FrmMain.cdsListaProj.Bookmark := BookMark;
+      frmMain.cdsListaProj.First;
    end;
 end;
 
@@ -119,51 +124,71 @@ var
    sDcuFiles: TStringList;
    sFileName: string;
    sDcuPath: string;
+   iProjetosProcessados: Integer;
+   iArquivosExcluidos: Integer;
+   iFalhas: Integer;
+   bTemSelecionado: Boolean;
 begin
    FiltraCds('SEL');
-
-   if (frmMain.cdsListaProj.RecordCount > 0) and (MsgYesNo('Gostaria de excluir os DCUs dos projetos selecionados?')) then begin
-      frmMain.mmoLog.Lines.Add('============================================================');
-      frmMain.mmoLog.Lines.Add('Iniciando exclusão dos DCUs...');
-      sDcuFiles := TStringList.Create;
-      try
-         frmMain.cdsListaProj.First;
-         while not frmMain.cdsListaProj.Eof do begin
-            sDcuPath := frmMain.cdsListaProjCAMINHOPROJ.AsString;
-            frmMain.stsRodape.Panels[STS_PRJ].Text := 'Projeto atual: ' + frmMain.cdsListaProjNOMEPROJ.AsString;
-            frmMain.mmoLog.Lines.Add('============================================================');
-            frmMain.mmoLog.Lines.Add('Iniciando exclusão do projeto: ' + frmMain.cdsListaProjNOMEPROJ.AsString);
-            frmMain.mmoLog.Lines.Add('============================================================');
-            Application.ProcessMessages;
-
-            if DirectoryExists(sDcuPath) then begin
-               // Localizar todos os arquivos .dcu na pasta
-               sDcuFiles.Clear;
-               sDcuFiles.AddStrings(TDirectory.GetFiles(sDcuPath, '*.dcu', TSearchOption.soAllDirectories));
-
-               // Excluir cada arquivo e registrar no memo
-               for sFileName in sDcuFiles do begin
-                  DeleteFile(sFileName);
-                  frmMain.mmoLog.Lines.Add('Arquivo excluído: ' + sFileName);
-               end;
-
-               frmMain.mmoLog.Lines.Add('Exclusão concluída para o projeto: ' + frmMain.cdsListaProjNOMEPROJ.AsString);
+   bTemSelecionado := frmMain.cdsListaProj.RecordCount > 0;
+   if not bTemSelecionado then begin
+      tDialogos.NenhumProjetoSelecionado('limpar os DCUs');
+   end else begin
+      if tDialogos.Confirmar('Gostaria de excluir os DCUs dos projetos selecionados?', 'Limpeza de DCUs', WC_MB_MSGNO) then begin
+         frmMain.mmoLog.Lines.Add('============================================================');
+         frmMain.mmoLog.Lines.Add('Iniciando exclusão dos DCUs...');
+         iProjetosProcessados := 0;
+         iArquivosExcluidos := 0;
+         iFalhas := 0;
+         sDcuFiles := TStringList.Create;
+         try
+            frmMain.cdsListaProj.First;
+            while not frmMain.cdsListaProj.Eof do begin
+               sDcuPath := frmMain.cdsListaProjCAMINHOPROJ.AsString;
+               Inc(iProjetosProcessados);
+               frmMain.stsRodape.Panels[STS_PRJ].Text := 'Projeto atual: ' + frmMain.cdsListaProjNOMEPROJ.AsString;
+               frmMain.mmoLog.Lines.Add('============================================================');
+               frmMain.mmoLog.Lines.Add('Iniciando exclusão do projeto: ' + frmMain.cdsListaProjNOMEPROJ.AsString);
+               frmMain.mmoLog.Lines.Add('============================================================');
                Application.ProcessMessages;
-            end else begin
-               frmMain.mmoLog.Lines.Add('Caminho do projeto não encontrado: ' + sDcuPath);
+               if DirectoryExists(sDcuPath) then begin
+                  sDcuFiles.Clear;
+                  sDcuFiles.AddStrings(TDirectory.GetFiles(sDcuPath, '*.dcu', TSearchOption.soAllDirectories));
+                  for sFileName in sDcuFiles do begin
+                     try
+                        if DeleteFile(sFileName) then begin
+                           Inc(iArquivosExcluidos);
+                           frmMain.mmoLog.Lines.Add('Arquivo excluído: ' + sFileName);
+                        end else begin
+                           Inc(iFalhas);
+                           frmMain.mmoLog.Lines.Add('Falha ao excluir arquivo: ' + sFileName);
+                        end;
+                     except
+                        on E: Exception do begin
+                           Inc(iFalhas);
+                           frmMain.mmoLog.Lines.Add('Erro ao excluir arquivo: ' + sFileName + ' | ' + E.Message);
+                        end;
+                     end;
+                  end;
+                  frmMain.mmoLog.Lines.Add('Exclusão concluída para o projeto: ' + frmMain.cdsListaProjNOMEPROJ.AsString);
+                  Application.ProcessMessages;
+               end else begin
+                  Inc(iFalhas);
+                  frmMain.mmoLog.Lines.Add('Caminho do projeto não encontrado: ' + sDcuPath);
+                  tDialogos.CaminhoNaoEncontrado(sDcuPath);
+               end;
+               frmMain.cdsListaProj.Next;
             end;
-            frmMain.cdsListaProj.Next;
+         finally
+            FreeAndNil(sDcuFiles);
+            frmMain.stsRodape.Panels[STS_PRJ].Text := 'Projeto atual: ';
+            frmMain.mmoLog.Lines.Add('============================================================');
+            frmMain.mmoLog.Lines.Add('Processo de exclusão dos DCUs concluído.');
+            frmMain.mmoLog.Lines.Add('============================================================');
+            tDialogos.ResumoLimpeza(iProjetosProcessados, iArquivosExcluidos, iFalhas);
          end;
-      finally
-         sDcuFiles.Free;
-         frmMain.stsRodape.Panels[STS_PRJ].Text := 'Projeto atual: ';
-         frmMain.mmoLog.Lines.Add('============================================================');
-         frmMain.mmoLog.Lines.Add('Processo de exclusão dos DCUs concluído.');
-         frmMain.mmoLog.Lines.Add('============================================================');
-         MsgInfo('Processo de exclusão dos DCUs concluído.');
       end;
    end;
-
    FiltraCds('');
    frmMain.cdsListaProj.First;
 end;

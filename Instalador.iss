@@ -1,6 +1,7 @@
 #define MyAppName "LimpaDCU"
 #define MyAppPublisher "SucoDev"
 #define MyAppExeName "LimpaDCU.exe"
+#define MyAppUserModelID "SucoDev.LimpaDCU"
 
 [Setup]
 ; NOTE: The value of AppId uniquely identifies this application.
@@ -13,7 +14,7 @@ AppVerName={#MyAppName} {#GetFileVersion("bin\LimpaDCU.exe")}
 AppPublisher={#MyAppPublisher}
 DefaultDirName=C:\Precisa\{#MyAppName}
 DefaultGroupName={#MyAppName}
-AllowNoIcons=yes
+AllowNoIcons=no
 LicenseFile=LICENSE.txt
 InfoBeforeFile=README_instalacao.txt
 InfoAfterFile=README_final.txt
@@ -37,10 +38,10 @@ Source: "bin\styles\AquaLightSlate.vsf"; DestDir: "{app}\styles"; DestName: "Aqu
 Source: "bin\styles\Glow.vsf"; DestDir: "{app}\styles"; DestName: "Glow.vsf"; Flags: ignoreversion
 
 [Icons]
-Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"
+Name: "{group}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; AppUserModelID: "{#MyAppUserModelID}"
 Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
-Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon
-Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon
+Name: "{commondesktop}\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: desktopicon; AppUserModelID: "{#MyAppUserModelID}"
+Name: "{userappdata}\Microsoft\Internet Explorer\Quick Launch\{#MyAppName}"; Filename: "{app}\{#MyAppExeName}"; Tasks: quicklaunchicon; AppUserModelID: "{#MyAppUserModelID}"
 
 [Run]
 Filename: "{app}\{#MyAppExeName}"; Description: "{cm:LaunchProgram,{#StringChange(MyAppName, '&', '&&')}}"; Flags: nowait postinstall skipifsilent

@@ -12,7 +12,7 @@ uses
   FireDAC.DApt, FireDAC.Comp.DataSet, FireDAC.Phys.Intf, FireDAC.Phys.SQLiteDef, FireDAC.DApt.Intf;
 
 type
-  TdtmCnx = class(TDataModule)
+  tDtmCnx = class(TDataModule)
     cnxDatabase: TFDConnection;
     qryListaProj: TFDQuery;
     qryListaProjIDPROJETO: TFDAutoIncField;
@@ -31,7 +31,7 @@ type
   end;
 
 var
-  dtmCnx: TdtmCnx;
+  dtmCnx: tDtmCnx;
 
 implementation
 
@@ -42,9 +42,9 @@ uses
 
 {$R *.dfm}
 
-{ TdtmCnx }
+{ tDtmCnx }
 
-procedure TdtmCnx.CadsatrarProjeto(sNome, sCaminho: string);
+procedure tDtmCnx.CadsatrarProjeto(sNome, sCaminho: string);
 var
    aQry: TFDQuery;
 begin
@@ -67,13 +67,13 @@ begin
    end;
 end;
 
-constructor TdtmCnx.Create(AOwner: TComponent);
+constructor tDtmCnx.Create(AOwner: TComponent);
 begin
    inherited;
    cnxDatabase.Params.Values['database'] := CAMINHO_DB;
 end;
 
-procedure TdtmCnx.DeleteProjeto(idProjeto: Integer);
+procedure tDtmCnx.DeleteProjeto(idProjeto: Integer);
 var
    aQry: TFDQuery;
 begin
@@ -93,7 +93,7 @@ begin
    end;
 end;
 
-procedure TdtmCnx.GarantirEstruturaDB;
+procedure tDtmCnx.GarantirEstruturaDB;
 begin
    if not cnxDatabase.Connected then cnxDatabase.Connected := True;
 
@@ -101,7 +101,7 @@ begin
    GarantirTabelaConfiguracao;
 end;
 
-procedure TdtmCnx.GarantirTabelaConfiguracao;
+procedure tDtmCnx.GarantirTabelaConfiguracao;
 begin
    cnxDatabase.ExecSQL(
       'CREATE TABLE IF NOT EXISTS TBLCFG0 (' +
@@ -111,7 +111,7 @@ begin
       );
 end;
 
-procedure TdtmCnx.GeraEstruturaDB;
+procedure tDtmCnx.GeraEstruturaDB;
 begin
    cnxDatabase.ExecSQL(
       'CREATE TABLE IF NOT EXISTS TBLCDSPROJ0 (' +
@@ -122,7 +122,7 @@ begin
       );
 end;
 
-procedure TdtmCnx.GravarConfiguracao(const sChave, sValor: string);
+procedure tDtmCnx.GravarConfiguracao(const sChave, sValor: string);
 var
    aQry: TFDQuery;
 begin
@@ -146,7 +146,7 @@ begin
    end;
 end;
 
-function TdtmCnx.LerConfiguracao(const sChave, sPadrao: string): string;
+function tDtmCnx.LerConfiguracao(const sChave, sPadrao: string): string;
 var
    aQry: TFDQuery;
 begin

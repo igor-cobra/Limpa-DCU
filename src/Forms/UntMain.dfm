@@ -188,10 +188,6 @@ object FrmMain: TFrmMain
       ReadOnly = True
       ScrollBars = ssVertical
       TabOrder = 0
-      ExplicitLeft = 0
-      ExplicitTop = 256
-      ExplicitWidth = 628
-      ExplicitHeight = 167
     end
   end
   object dsListaProj: TDataSource

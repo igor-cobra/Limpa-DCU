@@ -60,7 +60,7 @@ const
 implementation
 
 uses
-  UntLib, UntTemaAplicacao;
+  UntLib, UntTemaAplicacao, UntClassNotificacaoWindows;
 
 {$R *.dfm}
 
@@ -152,6 +152,7 @@ begin
 
    AtualizarEstadoControleTema;
    AplicarTemaTela;
+   tNotificacaoWindows.Inicializar;
 end;
 
 procedure TFrmMain.FormKeyDown(Sender: TObject; var Key: Word; Shift: TShiftState);

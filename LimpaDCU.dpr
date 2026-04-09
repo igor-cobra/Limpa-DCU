@@ -3,18 +3,24 @@ program LimpaDCU;
 uses
   Vcl.Forms,
   System.SysUtils,
-  UntMain in 'src\Forms\UntMain.pas' {FrmMain},
   Vcl.Themes,
   Vcl.Styles,
+  Winapi.Windows,
+  Winapi.ShlObj,
+  UntMain in 'src\Forms\UntMain.pas' {FrmMain},
   UntLib in 'src\lib\UntLib.pas',
   UntTemaAplicacao in 'src\Lib\UntTemaAplicacao.pas',
   UntDtmCnx in 'src\DataModule\UntDtmCnx.pas' {dtmCnx: TDataModule},
   UntClassLimpaDcu in 'src\Class\UntClassLimpaDcu.pas',
-  UntCdsProj0 in 'src\Forms\UntCdsProj0.pas' {FrmCdsProj0};
+  UntCdsProj0 in 'src\Forms\UntCdsProj0.pas' {FrmCdsProj0},
+  UntDlgPadrao in 'src\Forms\UntDlgPadrao.pas' {frmDlgPadrao},
+  UntClassNotificacaoWindows in 'src\Class\UntClassNotificacaoWindows.pas',
+  UntClassDialogos in 'src\Class\UntClassDialogos.pas';
 
 {$R *.res}
 
 begin
+   SetCurrentProcessExplicitAppUserModelID('SucoDev.LimpaDCU');
    CAMINHO_APL := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName));
    VERSAO_APL  := VersaoApl;
    NOME_APL    := ExtractFileName(Application.ExeName);
@@ -27,6 +33,7 @@ begin
       SetLibraryPath(CAMINHO_APL + 'lib\');
       if not DirectoryExists(CAMINHO_APL) then CreateDir(CAMINHO_APL);
       Application.Initialize;
+      Application.Title             := 'Limpa DCU';
       Application.MainFormOnTaskbar := True;
 
       Application.CreateForm(TdtmCnx, dtmCnx);
