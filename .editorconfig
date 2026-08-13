@@ -1,0 +1,40 @@
+root = true
+
+[*]
+insert_final_newline = true
+trim_trailing_whitespace = true
+
+[*.{pas,dpr,dpk,inc}]
+charset = utf-8-bom
+end_of_line = crlf
+indent_style = space
+indent_size = 3
+delphi_keep_user_linebreaks = true
+
+[*.dfm]
+charset = utf-8-bom
+end_of_line = crlf
+indent_style = space
+indent_size = 2
+
+[*.dproj]
+charset = utf-8
+end_of_line = crlf
+indent_style = space
+indent_size = 2
+
+[*.{ps1,iss,txt}]
+charset = utf-8-bom
+end_of_line = crlf
+indent_style = space
+indent_size = 3
+
+[*.{md,yml,yaml,json}]
+charset = utf-8
+end_of_line = lf
+indent_style = space
+indent_size = 2
+
+[.git*]
+charset = utf-8
+end_of_line = lf

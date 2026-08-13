@@ -1,10 +1,10 @@
-object dtmCnx: TdtmCnx
+﻿object dtmCnx: TdtmCnx
   Height = 228
   Width = 542
   object cnxDatabase: TFDConnection
     Params.Strings = (
-      'Database=$(APPDATA)\Limpa DCU\database.db'
-      'StringFormat=ANSI'
+      'Database=database.db'
+      'StringFormat=Unicode'
       'DateTimeFormat=DateTime'
       'DriverID=SQLite')
     LoginPrompt = False
@@ -29,21 +29,21 @@ object dtmCnx: TdtmCnx
       ProviderFlags = [pfInWhere, pfInKey]
       ReadOnly = True
     end
-    object qryListaProjNOMEPROJ: TStringField
+    object qryListaProjNOMEPROJ: TWideStringField
       AutoGenerateValue = arDefault
       FieldName = 'NOMEPROJ'
       Origin = 'NOMEPROJ'
       ProviderFlags = []
       ReadOnly = True
-      Size = 32767
+      Size = 100
     end
-    object qryListaProjCAMINHOPROJ: TStringField
+    object qryListaProjCAMINHOPROJ: TWideStringField
       AutoGenerateValue = arDefault
       FieldName = 'CAMINHOPROJ'
       Origin = 'CAMINHOPROJ'
       ProviderFlags = []
       ReadOnly = True
-      Size = 32767
+      Size = 500
     end
   end
 end

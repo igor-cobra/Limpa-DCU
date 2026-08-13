@@ -1,74 +1,133 @@
-# Delphi DCU Cleaner
+# LimpaDCU
 
-Utilitário desktop desenvolvido em Delphi para **agilizar a limpeza de arquivos `.dcu`** (Delphi Compiled Units) em projetos grandes, legados ou com múltiplos módulos e diretórios.
+Utilitário VCL para manutenção segura de artefatos de compilação em projetos Delphi.
 
-## 🧹 Objetivo
+**Baseline:** 2.2.0.0  
+**RAD Studio:** Delphi 13 Florence  
+**Plataformas:** Win32 e Win64
 
-Em projetos Delphi de médio e grande porte, o acúmulo de arquivos `.dcu` pode causar conflitos, comportamentos inesperados e problemas de compilação. Este utilitário foi criado para simplificar esse processo, permitindo a remoção rápida e controlada desses arquivos.
+O projeto continua se chamando **LimpaDCU** para preservar a identidade e o histórico do repositório, mas a estrutura foi preparada para crescer de forma controlada na direção de um pequeno **DevJanitor para Delphi**.
 
-## ✨ Funcionalidades
+## Estrutura
 
-- Cadastro de projetos e caminhos de varredura.
-- Varredura recursiva de diretórios.
-- Exclusão automatizada de arquivos `.dcu`.
-- Interface simples e objetiva.
-- Persistência de preferências do usuário.
-- Suporte a tema claro e escuro.
+```text
+LimpaDCU\
+├─ src\
+│  ├─ Class\
+│  ├─ DataModule\
+│  └─ Forms\
+├─ docs\
+├─ scripts\
+├─ installer\
+├─ assets\
+├─ bin\                    # gerado
+├─ build\                  # gerado
+├─ .editorconfig
+├─ .gitattributes
+├─ .gitignore
+├─ LimpaDCU.dpr
+├─ LimpaDCU.dproj
+└─ LimpaDCU.res
+```
 
-## 🛠️ Tecnologias Utilizadas
+## Compatibilidade
 
-- **Delphi / Object Pascal**
-- **VCL** para a interface visual
-- **FireDAC** para acesso ao banco local de configurações e dados
-- **SQLite** para persistência local
+A versão mínima **oficialmente suportada** é **Delphi 13 Florence**. O projeto também pode ser desenvolvido com o **Delphi 13 Community Edition**, desde que o usuário se enquadre nos termos de licenciamento da CE.
 
-## 📂 Estrutura do Projeto
+Lazarus/Free Pascal não é suportado atualmente. A lógica pode ser portada no futuro, mas a aplicação usa VCL, FireDAC e APIs específicas do Delphi/Windows, portanto não se trata de recompilar o mesmo projeto.
 
-- `UntMain.pas`: formulário principal da aplicação.
-- `UntClassLimpaDcu.pas`: regra principal da limpeza dos arquivos `.dcu`.
-- `UntCdsProj0.pas`: controle dos datasets de projetos cadastrados.
-- `UntDtmCnx.pas`: data module com conexão e estrutura do banco local.
-- `UntLib.pas`: funções auxiliares do projeto.
-- `UntTemaAplicacao.pas`: centralização de tema, estilos visuais e persistência da preferência do usuário.
+Veja [docs/COMPATIBILIDADE.md](docs/COMPATIBILIDADE.md).
 
-## ⚙️ Como Usar
+## Fluxo Git
 
-1. Compile o projeto no Delphi.
-2. Execute o aplicativo.
-3. Cadastre um ou mais projetos informando o diretório raiz.
-4. Selecione os projetos desejados.
-5. Inicie a limpeza.
-6. Acompanhe o log da aplicação durante o processo.
+Mudanças arquiteturais e infraestrutura de testes devem ser desenvolvidas em branches separadas. Para esta baseline, use `refactor/production-baseline`; depois do merge na `main`, crie `test/dunitx` para a suíte DUnitX.
 
-## 🎨 Temas e arquivos `.vsf`
+Veja [docs/FLUXO_GIT.md](docs/FLUXO_GIT.md).
 
-- Os arquivos `.vsf` utilizados por este projeto **não foram incluídos neste repositório**. Como os estilos atualmente adotados podem ser obtidos a partir do ecossistema do Delphi / RAD Studio, optou-se por **não versioná-los publicamente** junto ao código-fonte.
-- O projeto foi implementado de forma a **priorizar primeiro os recursos disponíveis no próprio ambiente Delphi**, reaproveitando o comportamento padrão do sistema de estilos da plataforma. Ainda assim, por **medida de segurança e previsibilidade na distribuição**, também é suportado o carregamento dos arquivos `.vsf` externos pela pasta `styles`, localizada ao lado do executável.
-- Essa abordagem foi adotada para evitar dependência exclusiva da configuração local de cada máquina de desenvolvimento, garantindo que a aplicação possa encontrar exatamente os estilos esperados em ambiente de teste, homologação e produção.
-- Os arquivos podem ser posicionados na seguinte estrutura:
+## Project Manager do Delphi
 
-  ```text
-  styles\
-    AquaLightSlate.vsf
-    Glow.vsf
-  ```
+Os arquivos de configuração, documentação, scripts e instalador são referenciados no `.dproj` como itens `<None Include="...">`.
 
-## 📌 Observações
+Isso faz com que eles apareçam no **Project Manager** do Delphi sem serem enviados ao `dcc32`/`dcc64`.
 
-- É **altamente recomendado realizar backup** antes de executar limpezas em massa.
-- O utilitário foi projetado para atuar sobre arquivos `.dcu`.
-- Revise cuidadosamente qualquer personalização local antes de executar o processo em diretórios compartilhados.
+Entre eles:
 
-## 📜 Licença
+- `.editorconfig`;
+- `.gitattributes`;
+- `.gitignore`;
+- `README.md`;
+- `CHANGELOG.md`;
+- documentação de `docs\`;
+- scripts PowerShell;
+- `installer\LimpaDCU.iss`.
 
-Este projeto está licenciado sob os termos da **MIT License**.
+## EditorConfig e Delphi 13
 
-Consulte o arquivo [`LICENSE_MIT.txt`](LICENSE_MIT.txt) para o texto completo da licença.
+O RAD Studio não depende do `.editorconfig` para suas opções normais de editor. Neste projeto o arquivo tem dois objetivos:
 
-## 🤝 Contribuições
+1. definir regras estáveis para ferramentas/editoras que suportam EditorConfig;
+2. servir como configuração por projeto para o **MSys Delphi Formatter** no RAD Studio 13.
 
-Contribuições são bem-vindas. Sinta-se à vontade para abrir issues ou enviar pull requests com melhorias, correções e sugestões.
+O formatter mantém o fluxo `Ctrl+D` e lê regras do `.editorconfig` mais próximo do fonte.
 
----
+Veja [docs/EDITORCONFIG_E_FORMATTER.md](docs/EDITORCONFIG_E_FORMATTER.md).
 
-> Desenvolvido para facilitar o dia a dia de quem lida com grandes projetos Delphi.
+## Recurso do projeto
+
+O `LimpaDCU.res` é versionado de propósito. Ele contém o recurso de aplicação necessário para que uma build por MSBuild funcione também em checkout limpo, sem depender de a IDE ter recriado o recurso antes.
+
+## Build
+
+O projeto abre por padrão em:
+
+```text
+Debug + Win32
+```
+
+As saídas são segregadas:
+
+```text
+bin\Win32\Debug\
+bin\Win32\Release\
+bin\Win64\Debug\
+bin\Win64\Release\
+
+build\dcu\Win32\Debug\
+build\dcu\Win32\Release\
+build\dcu\Win64\Debug\
+build\dcu\Win64\Release\
+```
+
+Debug utiliza Runtime Packages. Release não utiliza Runtime Packages e é a configuração destinada à distribuição em máquinas sem Delphi instalado.
+
+Para compilar as duas arquiteturas Release:
+
+```powershell
+pwsh .\scripts\Build.ps1 -Configuration Release -Platform All -Target Rebuild
+```
+
+Para gerar a release completa:
+
+```powershell
+pwsh .\scripts\Release.ps1
+```
+
+## Dados
+
+A instalação utiliza o mesmo banco para Win32 e Win64:
+
+```text
+%PROGRAMDATA%\SucoDev\LimpaDCU\data\database.db
+```
+
+Quando o diretório compartilhado não está disponível em execução de desenvolvimento, existe fallback para `%LOCALAPPDATA%\SucoDev\LimpaDCU`.
+
+## Segurança da limpeza
+
+A rotina continua removendo apenas `*.dcu`.
+
+Ela não atravessa roots de unidade nem junctions/reparse points, e falhas de acesso em subpastas são registradas sem interromper toda a execução.
+
+## Licença
+
+MIT. Consulte [LICENSE](LICENSE).

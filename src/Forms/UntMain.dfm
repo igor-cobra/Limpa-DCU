@@ -1,4 +1,4 @@
-object FrmMain: TFrmMain
+﻿object FrmMain: TFrmMain
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
@@ -14,7 +14,9 @@ object FrmMain: TFrmMain
   Font.Style = []
   KeyPreview = True
   Position = poScreenCenter
+  OnActivate = FormActivate
   OnCreate = FormCreate
+  OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
   TextHeight = 15
@@ -25,7 +27,7 @@ object FrmMain: TFrmMain
     Height = 19
     Panels = <
       item
-        Text = 'Vers'#227'o APL: 1.0.0.0'
+        Text = 'Vers'#227'o:'
         Width = 150
       end
       item
@@ -52,7 +54,7 @@ object FrmMain: TFrmMain
       Top = 34
       Width = 75
       Height = 25
-      Caption = '&Limpar Dcu'#39's'
+      Caption = '&Limpar DCUs'
       TabOrder = 0
       OnClick = btnLimparDcuClick
     end
@@ -159,7 +161,7 @@ object FrmMain: TFrmMain
     Width = 628
     Height = 167
     Align = alBottom
-    Caption = 'pnlBottom'
+    Caption = ''
     TabOrder = 3
     object lblLogRegistros: TLabel
       Left = 1
@@ -183,8 +185,6 @@ object FrmMain: TFrmMain
       Height = 144
       TabStop = False
       Align = alClient
-      Lines.Strings = (
-        'mmoLog')
       ReadOnly = True
       ScrollBars = ssVertical
       TabOrder = 0
@@ -211,11 +211,11 @@ object FrmMain: TFrmMain
     object cdsListaProjIDPROJETO: TIntegerField
       FieldName = 'IDPROJETO'
     end
-    object cdsListaProjNOMEPROJ: TStringField
+    object cdsListaProjNOMEPROJ: TWideStringField
       FieldName = 'NOMEPROJ'
       Size = 100
     end
-    object cdsListaProjCAMINHOPROJ: TStringField
+    object cdsListaProjCAMINHOPROJ: TWideStringField
       FieldName = 'CAMINHOPROJ'
       Size = 500
     end

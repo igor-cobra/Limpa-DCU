@@ -1,4 +1,4 @@
-object frmDlgPadrao: TfrmDlgPadrao
+﻿object frmDlgPadrao: TfrmDlgPadrao
   Left = 0
   Top = 0
   BorderIcons = [biSystemMenu]
@@ -126,8 +126,6 @@ object frmDlgPadrao: TfrmDlgPadrao
           Width = 472
           Height = 49
           BorderStyle = bsNone
-          Lines.Strings = (
-            'mmoDetalhes')
           ReadOnly = True
           ScrollBars = ssVertical
           TabOrder = 0

@@ -1,4 +1,4 @@
-unit UntClassNotificacaoWindows;
+﻿unit UntClassNotificacaoWindows;
 
 interface
 
@@ -26,12 +26,14 @@ type
       class function SistemaSuportaNotificacao: Boolean; static;
       class procedure TratarCliqueNotificacao(const sIdentificador: string); static;
    public
-      class procedure Inicializar(aOwner: TComponent = nil); static;
+      class procedure Inicializar; static;
       class procedure Finalizar; static;
-      class function Suportado: Boolean; static;
       class function AplicacaoEmFoco: Boolean; static;
-      class function Enviar(const sTitulo, sTexto: string; const sIdentificador: string = ''; bSom: Boolean = True): Boolean; static;
-      class function EnviarSeAplicacaoNaoEstiverEmFoco(const sTitulo, sTexto: string; const sIdentificador: string = ''; bSom: Boolean = True): Boolean; static;
+      class function Enviar(const sTitulo, sTexto: string;
+         const sIdentificador: string = ''; bSom: Boolean = True): Boolean; static;
+      class function EnviarSeAplicacaoNaoEstiverEmFoco(const sTitulo, sTexto: string;
+         const sIdentificador: string = ''; bSom: Boolean = True): Boolean; static;
+      class procedure Cancelar(const sIdentificador: string); static;
       class procedure CancelarTodas; static;
       class procedure DefinirAcaoClique(const aAcao: tOnCliqueNotificacaoWindows); static;
    end;
@@ -42,8 +44,6 @@ uses
    System.SysUtils,
    Vcl.Forms;
 
-{ tRecebedorNotificacaoWindows }
-
 procedure tRecebedorNotificacaoWindows.ReceberNotificacaoLocal(Sender: TObject;
    ANotification: TNotification);
 begin
@@ -52,15 +52,12 @@ begin
    end;
 end;
 
-{ tNotificacaoWindows }
-
 class function tNotificacaoWindows.AplicacaoEmFoco: Boolean;
 var
    hJanelaForeground: HWND;
    iProcessoJanelaForeground: DWORD;
    iProcessoAtual: DWORD;
 begin
-   Result := False;
    hJanelaForeground := GetForegroundWindow;
    iProcessoJanelaForeground := 0;
    iProcessoAtual := GetCurrentProcessId;
@@ -73,6 +70,23 @@ begin
    end;
 end;
 
+class procedure tNotificacaoWindows.Cancelar(const sIdentificador: string);
+begin
+   if Trim(sIdentificador) = '' then begin
+      Exit;
+   end;
+
+   GarantirInicializado;
+
+   if Assigned(aNotificationCenter) then begin
+      try
+         aNotificationCenter.CancelNotification(sIdentificador);
+      except
+         // A Central de Notificações pode rejeitar cancelamentos fora de contexto.
+      end;
+   end;
+end;
+
 class procedure tNotificacaoWindows.CancelarTodas;
 begin
    GarantirInicializado;
@@ -81,7 +95,7 @@ begin
       try
          aNotificationCenter.CancelAll;
       except
-         // ignora falhas do sistema de notifica��es
+         // Falha de notificação não deve impedir o encerramento da aplicação.
       end;
    end;
 end;
@@ -97,55 +111,64 @@ class function tNotificacaoWindows.Enviar(const sTitulo, sTexto,
 var
    aNotificacao: TNotification;
    sNome: string;
-   bResult: Boolean;
 begin
-   bResult := False;
+   Result := False;
 
-   if SistemaSuportaNotificacao then begin
-      GarantirInicializado;
-
-      if Assigned(aNotificationCenter) then begin
-         try
-            sNome := Trim(sIdentificador);
-
-            if sNome = '' then begin
-               sNome := GerarIdentificador('LIMPA_DCU');
-            end;
-
-            aNotificacao := aNotificationCenter.CreateNotification;
-            aNotificacao.Name := sNome;
-            aNotificacao.Title := sTitulo;
-            aNotificacao.AlertBody := sTexto;
-            aNotificacao.EnableSound := bSom;
-
-            aNotificationCenter.PresentNotification(aNotificacao);
-            bResult := True;
-         except
-            bResult := False;
-         end;
-      end;
+   if not SistemaSuportaNotificacao then begin
+      Exit;
    end;
 
-   Result := bResult;
+   GarantirInicializado;
+
+   if not Assigned(aNotificationCenter) then begin
+      Exit;
+   end;
+
+   try
+      sNome := Trim(sIdentificador);
+
+      if sNome = '' then begin
+         sNome := GerarIdentificador('LIMPA_DCU');
+      end;
+
+      aNotificacao := aNotificationCenter.CreateNotification;
+      try
+         aNotificacao.Name := sNome;
+         aNotificacao.Title := sTitulo;
+         aNotificacao.AlertBody := sTexto;
+         aNotificacao.EnableSound := bSom;
+         aNotificationCenter.PresentNotification(aNotificacao);
+         Result := True;
+      finally
+         FreeAndNil(aNotificacao);
+      end;
+   except
+      Result := False;
+   end;
 end;
 
 class function tNotificacaoWindows.EnviarSeAplicacaoNaoEstiverEmFoco(
    const sTitulo, sTexto, sIdentificador: string; bSom: Boolean): Boolean;
-var
-   bResult: Boolean;
 begin
-   bResult := False;
+   Result := False;
 
    if not AplicacaoEmFoco then begin
-      bResult := Enviar(sTitulo, sTexto, sIdentificador, bSom);
+      Result := Enviar(sTitulo, sTexto, sIdentificador, bSom);
    end;
-
-   Result := bResult;
 end;
 
 class procedure tNotificacaoWindows.Finalizar;
 begin
    fOnCliqueNotificacao := nil;
+
+   if Assigned(aNotificationCenter) then begin
+      try
+         aNotificationCenter.CancelAll;
+      except
+         // Melhor esforço durante a finalização.
+      end;
+   end;
+
    FreeAndNil(aNotificationCenter);
    FreeAndNil(aRecebedor);
 end;
@@ -165,30 +188,18 @@ end;
 class function tNotificacaoWindows.GerarIdentificador(
    const sPrefixo: string): string;
 begin
-   Result := sPrefixo + '_' + FormatDateTime('yyyymmdd_hhnnss_zzz', Now);
+   Result := sPrefixo + '_' + FormatDateTime('yyyymmdd_hhnnss_zzz', Now) +
+      '_' + IntToHex(GetTickCount, 8);
 end;
 
-class procedure tNotificacaoWindows.Inicializar(aOwner: TComponent);
+class procedure tNotificacaoWindows.Inicializar;
 begin
    GarantirInicializado;
 end;
 
 class function tNotificacaoWindows.SistemaSuportaNotificacao: Boolean;
-var
-   bResult: Boolean;
 begin
-   bResult := TOSVersion.Platform = pfWindows;
-
-   if bResult then begin
-      bResult := TOSVersion.Check(6, 2);
-   end;
-
-   Result := bResult;
-end;
-
-class function tNotificacaoWindows.Suportado: Boolean;
-begin
-   Result := SistemaSuportaNotificacao;
+   Result := (TOSVersion.Platform = pfWindows) and TOSVersion.Check(6, 2);
 end;
 
 class procedure tNotificacaoWindows.TratarCliqueNotificacao(

@@ -1,0 +1,10 @@
+﻿LIMPA DCU - INSTALACAO / ATUALIZACAO
+
+O instalador contém as versões Win32 e Win64.
+
+Em Windows 64-bit você poderá escolher a arquitetura. Win64 é recomendada; Win32 permanece disponível para compatibilidade.
+
+Antes de remover resíduos de versões anteriores, o instalador tenta preservar o banco de dados existente. Se essa migração falhar, a instalação é interrompida antes da limpeza do legado.
+
+Os dados atuais ficam em:
+%PROGRAMDATA%\SucoDev\LimpaDCU

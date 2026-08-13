@@ -1,35 +1,49 @@
-unit UntClassLimpaDcu;
+Ôªøunit UntClassLimpaDcu;
 
 interface
 
 uses
-   System.Classes, System.SysUtils, UntDtmCnx, Vcl.StdCtrls;
+   System.Classes,
+   System.SysUtils,
+   System.UITypes,
+   UntDtmCnx;
 
 type
    TLimpaDcu = class
    private
       Cnx: TdtmCnx;
-      mmoLog: TMemo;
-      function CheckDatabaseExists: Boolean;
-      procedure FiltraCds(sCondicao: string);
-   protected
+      procedure FiltrarCds(const sCondicao: string);
+      procedure RegistrarLog(const sMensagem: string);
+      procedure AtualizarInterface;
+      procedure ListarDcus(const sPasta: string; aArquivos: TStrings;
+         var iFalhas: Integer);
+      function CaminhoSeguroParaLimpeza(const sCaminho: string): Boolean;
    public
-      procedure CarregaProjetos;
+      constructor Create(aCnx: TdtmCnx);
+      procedure CarregarProjetos;
       procedure Cadastrar;
       procedure Excluir;
       procedure LimparDcu;
       procedure SelecionarRegistro(bTodos: Boolean);
-      constructor Create;
-      destructor Destroy; override;
    end;
 
 implementation
 
 uses
-   UntLib, UntMain, Data.DB, UntCdsProj0, Vcl.Forms, System.IOUtils,
-  UntClassDialogos;
+   Winapi.Windows,
+   Winapi.Messages,
+   Data.DB,
+   System.IOUtils,
+   UntCdsProj0,
+   UntMain,
+   UntClassDialogos,
+   UntClassLog;
 
-{ TLimpaDcu }
+procedure TLimpaDcu.AtualizarInterface;
+begin
+   frmMain.stsRodape.Update;
+   frmMain.mmoLog.Update;
+end;
 
 procedure TLimpaDcu.Cadastrar;
 var
@@ -37,182 +51,327 @@ var
 begin
    Proj0 := TFrmCdsProj0.Create(nil);
    try
-      Proj0.ShowModal;
-      if Proj0.Salvar then begin
-         Cnx.CadsatrarProjeto(Proj0.fldNomeProjeto.Text, Proj0.fldCaminhoProjeto.Text);
-         CarregaProjetos;
+      if Proj0.ShowModal = mrOk then begin
+         Cnx.CadastrarProjeto(Proj0.fldNomeProjeto.Text, Proj0.fldCaminhoProjeto.Text);
+         RegistrarLog('Projeto cadastrado: ' + Proj0.fldNomeProjeto.Text + ' | ' +
+            Proj0.fldCaminhoProjeto.Text);
+         CarregarProjetos;
       end;
    finally
       FreeAndNil(Proj0);
    end;
 end;
 
-procedure TLimpaDcu.CarregaProjetos;
+procedure TLimpaDcu.CarregarProjetos;
 begin
-   frmMain.cdsListaProj.Close;
-   frmMain.cdsListaProj.CreateDataSet;
    frmMain.cdsListaProj.DisableControls;
-   Cnx.qryListaProj.Open;
-   Cnx.qryListaProj.First;
-   while not Cnx.qryListaProj.Eof do begin
-      frmMain.cdsListaProj.Append;
-      frmMain.cdsListaProjSEL.AsBoolean        := False;
-      frmMain.cdsListaProjIDPROJETO.AsInteger  := Cnx.qryListaProjIDPROJETO.AsInteger;
-      frmMain.cdsListaProjNOMEPROJ.AsString    := Cnx.qryListaProjNOMEPROJ.AsString;
-      frmMain.cdsListaProjCAMINHOPROJ.AsString := Cnx.qryListaProjCAMINHOPROJ.AsString;
-      frmMain.cdsListaProj.Post;
+   try
+      frmMain.cdsListaProj.Close;
+      frmMain.cdsListaProj.CreateDataSet;
 
-      Cnx.qryListaProj.Next;
+      Cnx.qryListaProj.Close;
+      Cnx.qryListaProj.Open;
+      try
+         Cnx.qryListaProj.First;
+
+         while not Cnx.qryListaProj.Eof do begin
+            frmMain.cdsListaProj.Append;
+            frmMain.cdsListaProjSEL.AsBoolean := False;
+            frmMain.cdsListaProjIDPROJETO.AsInteger := Cnx.qryListaProjIDPROJETO.AsInteger;
+            frmMain.cdsListaProjNOMEPROJ.AsWideString := Cnx.qryListaProjNOMEPROJ.AsWideString;
+            frmMain.cdsListaProjCAMINHOPROJ.AsWideString := Cnx.qryListaProjCAMINHOPROJ.AsWideString;
+            frmMain.cdsListaProj.Post;
+            Cnx.qryListaProj.Next;
+         end;
+      finally
+         Cnx.qryListaProj.Close;
+      end;
+
+      frmMain.cdsListaProj.First;
+   finally
+      frmMain.cdsListaProj.EnableControls;
    end;
-   frmMain.cdsListaProj.First;
-   frmMain.cdsListaProj.EnableControls;
-   Cnx.qryListaProj.Close;
 end;
 
-function TLimpaDcu.CheckDatabaseExists: Boolean;
+function TLimpaDcu.CaminhoSeguroParaLimpeza(const sCaminho: string): Boolean;
+var
+   iAtributos: DWORD;
+   sCaminhoNormalizado: string;
+   sRaiz: string;
 begin
-	Result := FileExists(CAMINHO_DB);
+   Result := False;
+
+   if Trim(sCaminho) = '' then begin
+      Exit;
+   end;
+
+   try
+      sCaminhoNormalizado := IncludeTrailingPathDelimiter(ExpandFileName(Trim(sCaminho)));
+      sRaiz := IncludeTrailingPathDelimiter(TPath.GetPathRoot(sCaminhoNormalizado));
+   except
+      Exit;
+   end;
+
+   if SameText(sCaminhoNormalizado, sRaiz) then begin
+      Exit;
+   end;
+
+   if not DirectoryExists(sCaminhoNormalizado) then begin
+      Exit;
+   end;
+
+   iAtributos := GetFileAttributes(PChar(ExcludeTrailingPathDelimiter(sCaminhoNormalizado)));
+
+   if iAtributos = INVALID_FILE_ATTRIBUTES then begin
+      Exit;
+   end;
+
+   if (iAtributos and FILE_ATTRIBUTE_REPARSE_POINT) <> 0 then begin
+      Exit;
+   end;
+
+   Result := (iAtributos and FILE_ATTRIBUTE_DIRECTORY) <> 0;
 end;
 
-constructor TLimpaDcu.Create;
+constructor TLimpaDcu.Create(aCnx: TdtmCnx);
 begin
-   mmoLog := frmMain.mmoLog;
-   Cnx    := TdtmCnx.Create(nil);
-   Cnx.GarantirEstruturaDB;
-end;
+   inherited Create;
 
-destructor TLimpaDcu.Destroy;
-begin
-   FreeAndNil(Cnx);
+   if not Assigned(aCnx) then begin
+      raise Exception.Create('A conex√£o do LimpaDCU n√£o foi inicializada.');
+   end;
+
+   Cnx := aCnx;
 end;
 
 procedure TLimpaDcu.Excluir;
-var
-   bTemSelecionado: Boolean;
 begin
-   FiltraCds('SEL');
-   bTemSelecionado := frmMain.cdsListaProj.RecordCount > 0;
+   FiltrarCds('SEL = True');
    try
-      if not bTemSelecionado then begin
+      if frmMain.cdsListaProj.RecordCount = 0 then begin
          tDialogos.NenhumProjetoSelecionado('excluir');
-      end else begin
-         if tDialogos.Confirmar('Gostaria de excluir os projetos selecionados?', 'Excluir projetos', WC_MB_MSGNO) then begin
-            frmMain.cdsListaProj.First;
-            while not frmMain.cdsListaProj.Eof do begin
-               Cnx.DeleteProjeto(frmMain.cdsListaProjIDPROJETO.AsInteger);
-               frmMain.cdsListaProj.Next;
-            end;
-            tDialogos.Informacao('Os projetos selecionados foram excluÌdos com sucesso.', 'Exclus„o concluÌda');
-         end;
+         Exit;
       end;
-   finally
-      FiltraCds('');
-      CarregaProjetos;
+
+      if not tDialogos.Confirmar(
+         'Gostaria de excluir os projetos selecionados?',
+         'Excluir projetos',
+         bcpNao
+         ) then begin
+         Exit;
+      end;
+
       frmMain.cdsListaProj.First;
+      while not frmMain.cdsListaProj.Eof do begin
+         RegistrarLog('Projeto removido do cadastro: ' +
+            frmMain.cdsListaProjNOMEPROJ.AsWideString);
+         Cnx.ExcluirProjeto(frmMain.cdsListaProjIDPROJETO.AsInteger);
+         frmMain.cdsListaProj.Next;
+      end;
+
+      tDialogos.Informacao('Os projetos selecionados foram exclu√≠dos com sucesso.',
+         'Exclus√£o conclu√≠da');
+   finally
+      FiltrarCds('');
+      CarregarProjetos;
    end;
 end;
 
-procedure TLimpaDcu.FiltraCds(sCondicao: string);
+procedure TLimpaDcu.FiltrarCds(const sCondicao: string);
 begin
    frmMain.cdsListaProj.Filtered := False;
-   frmMain.cdsListaProj.Filter   := sCondicao;
-   frmMain.cdsListaProj.Filtered := True;
+   frmMain.cdsListaProj.Filter := Trim(sCondicao);
+
+   if Trim(sCondicao) <> '' then begin
+      frmMain.cdsListaProj.Filtered := True;
+   end;
 end;
 
 procedure TLimpaDcu.LimparDcu;
 var
-   sDcuFiles: TStringList;
+   aDcuFiles: TStringList;
    sFileName: string;
    sDcuPath: string;
    iProjetosProcessados: Integer;
    iArquivosExcluidos: Integer;
    iFalhas: Integer;
-   bTemSelecionado: Boolean;
 begin
-   FiltraCds('SEL');
-   bTemSelecionado := frmMain.cdsListaProj.RecordCount > 0;
-   if not bTemSelecionado then begin
-      tDialogos.NenhumProjetoSelecionado('limpar os DCUs');
-   end else begin
-      if tDialogos.Confirmar('Gostaria de excluir os DCUs dos projetos selecionados?', 'Limpeza de DCUs', WC_MB_MSGNO) then begin
-         frmMain.mmoLog.Lines.Add('============================================================');
-         frmMain.mmoLog.Lines.Add('Iniciando exclus„o dos DCUs...');
-         iProjetosProcessados := 0;
-         iArquivosExcluidos := 0;
-         iFalhas := 0;
-         sDcuFiles := TStringList.Create;
-         try
-            frmMain.cdsListaProj.First;
-            while not frmMain.cdsListaProj.Eof do begin
-               sDcuPath := frmMain.cdsListaProjCAMINHOPROJ.AsString;
-               Inc(iProjetosProcessados);
-               frmMain.stsRodape.Panels[STS_PRJ].Text := 'Projeto atual: ' + frmMain.cdsListaProjNOMEPROJ.AsString;
-               frmMain.mmoLog.Lines.Add('============================================================');
-               frmMain.mmoLog.Lines.Add('Iniciando exclus„o do projeto: ' + frmMain.cdsListaProjNOMEPROJ.AsString);
-               frmMain.mmoLog.Lines.Add('============================================================');
-               Application.ProcessMessages;
-               if DirectoryExists(sDcuPath) then begin
-                  sDcuFiles.Clear;
-                  sDcuFiles.AddStrings(TDirectory.GetFiles(sDcuPath, '*.dcu', TSearchOption.soAllDirectories));
-                  for sFileName in sDcuFiles do begin
-                     try
-                        if DeleteFile(sFileName) then begin
-                           Inc(iArquivosExcluidos);
-                           frmMain.mmoLog.Lines.Add('Arquivo excluÌdo: ' + sFileName);
-                        end else begin
-                           Inc(iFalhas);
-                           frmMain.mmoLog.Lines.Add('Falha ao excluir arquivo: ' + sFileName);
-                        end;
-                     except
-                        on E: Exception do begin
-                           Inc(iFalhas);
-                           frmMain.mmoLog.Lines.Add('Erro ao excluir arquivo: ' + sFileName + ' | ' + E.Message);
-                        end;
-                     end;
-                  end;
-                  frmMain.mmoLog.Lines.Add('Exclus„o concluÌda para o projeto: ' + frmMain.cdsListaProjNOMEPROJ.AsString);
-                  Application.ProcessMessages;
-               end else begin
-                  Inc(iFalhas);
-                  frmMain.mmoLog.Lines.Add('Caminho do projeto n„o encontrado: ' + sDcuPath);
-                  tDialogos.CaminhoNaoEncontrado(sDcuPath);
-               end;
+   aDcuFiles := TStringList.Create;
+   try
+      iProjetosProcessados := 0;
+      iArquivosExcluidos := 0;
+      iFalhas := 0;
+
+      FiltrarCds('SEL = True');
+      try
+         if frmMain.cdsListaProj.RecordCount = 0 then begin
+            tDialogos.NenhumProjetoSelecionado('limpar os DCUs');
+            Exit;
+         end;
+
+         if not tDialogos.Confirmar(
+            'Gostaria de excluir os DCUs dos projetos selecionados?',
+            'Limpeza de DCUs',
+            bcpNao
+            ) then begin
+            Exit;
+         end;
+
+         RegistrarLog('============================================================');
+         RegistrarLog('Iniciando limpeza de DCUs.');
+
+         frmMain.cdsListaProj.First;
+         while not frmMain.cdsListaProj.Eof do begin
+            Inc(iProjetosProcessados);
+            sDcuPath := frmMain.cdsListaProjCAMINHOPROJ.AsWideString;
+
+            frmMain.stsRodape.Panels[STS_PRJ].Text := 'Projeto atual: ' +
+               frmMain.cdsListaProjNOMEPROJ.AsWideString;
+            RegistrarLog('Projeto: ' + frmMain.cdsListaProjNOMEPROJ.AsWideString +
+               ' | ' + sDcuPath);
+            AtualizarInterface;
+
+            if not CaminhoSeguroParaLimpeza(sDcuPath) then begin
+               Inc(iFalhas);
+               RegistrarLog('IGNORADO | Caminho inexistente, raiz ou reparse point: ' + sDcuPath);
                frmMain.cdsListaProj.Next;
+               Continue;
             end;
-         finally
-            FreeAndNil(sDcuFiles);
-            frmMain.stsRodape.Panels[STS_PRJ].Text := 'Projeto atual: ';
-            frmMain.mmoLog.Lines.Add('============================================================');
-            frmMain.mmoLog.Lines.Add('Processo de exclus„o dos DCUs concluÌdo.');
-            frmMain.mmoLog.Lines.Add('============================================================');
-            tDialogos.ResumoLimpeza(iProjetosProcessados, iArquivosExcluidos, iFalhas);
+
+            aDcuFiles.Clear;
+            ListarDcus(sDcuPath, aDcuFiles, iFalhas);
+
+            for sFileName in aDcuFiles do begin
+               try
+                  TFile.Delete(sFileName);
+                  Inc(iArquivosExcluidos);
+                  RegistrarLog('Arquivo exclu√≠do: ' + sFileName);
+               except
+                  on E: Exception do begin
+                     Inc(iFalhas);
+                     RegistrarLog('ERRO | ' + sFileName + ' | ' + E.Message);
+                  end;
+               end;
+            end;
+
+            AtualizarInterface;
+            frmMain.cdsListaProj.Next;
+         end;
+
+         RegistrarLog('Limpeza finalizada. Projetos: ' + IntToStr(iProjetosProcessados) +
+            ' | Arquivos: ' + IntToStr(iArquivosExcluidos) +
+            ' | Falhas: ' + IntToStr(iFalhas));
+         tDialogos.ResumoLimpeza(iProjetosProcessados, iArquivosExcluidos, iFalhas);
+      finally
+         frmMain.stsRodape.Panels[STS_PRJ].Text := 'Projeto atual: ';
+         FiltrarCds('');
+
+         if frmMain.cdsListaProj.Active then begin
+            frmMain.cdsListaProj.First;
          end;
       end;
+   finally
+      FreeAndNil(aDcuFiles);
    end;
-   FiltraCds('');
-   frmMain.cdsListaProj.First;
+end;
+
+procedure TLimpaDcu.ListarDcus(const sPasta: string; aArquivos: TStrings;
+   var iFalhas: Integer);
+var
+   aDcusPasta: TArray<string>;
+   aSubPastas: TArray<string>;
+   iAtributos: DWORD;
+   sArquivo: string;
+   sSubPasta: string;
+begin
+   try
+      aDcusPasta := TDirectory.GetFiles(sPasta, '*.dcu', TSearchOption.soTopDirectoryOnly);
+      for sArquivo in aDcusPasta do begin
+         aArquivos.Add(sArquivo);
+      end;
+   except
+      on E: Exception do begin
+         Inc(iFalhas);
+         RegistrarLog('ERRO | N√£o foi poss√≠vel listar DCUs em: ' + sPasta + ' | ' + E.Message);
+      end;
+   end;
+
+   try
+      aSubPastas := TDirectory.GetDirectories(sPasta, '*', TSearchOption.soTopDirectoryOnly);
+   except
+      on E: Exception do begin
+         Inc(iFalhas);
+         RegistrarLog('ERRO | N√£o foi poss√≠vel listar subpastas em: ' + sPasta +
+            ' | ' + E.Message);
+         Exit;
+      end;
+   end;
+
+   for sSubPasta in aSubPastas do begin
+      iAtributos := GetFileAttributes(PChar(sSubPasta));
+
+      if iAtributos = INVALID_FILE_ATTRIBUTES then begin
+         Inc(iFalhas);
+         RegistrarLog('ERRO | N√£o foi poss√≠vel consultar os atributos da pasta: ' + sSubPasta);
+         Continue;
+      end;
+
+      if (iAtributos and FILE_ATTRIBUTE_REPARSE_POINT) <> 0 then begin
+         RegistrarLog('IGNORADO | Link/junction fora da varredura: ' + sSubPasta);
+         Continue;
+      end;
+
+      ListarDcus(sSubPasta, aArquivos, iFalhas);
+   end;
+end;
+
+procedure TLimpaDcu.RegistrarLog(const sMensagem: string);
+begin
+   frmMain.mmoLog.Lines.Add(sMensagem);
+   frmMain.mmoLog.SelStart := Length(frmMain.mmoLog.Text);
+   frmMain.mmoLog.Perform(EM_SCROLLCARET, 0, 0);
+   tLogAplicacao.Registrar(sMensagem);
 end;
 
 procedure TLimpaDcu.SelecionarRegistro(bTodos: Boolean);
+var
+   bSelecionar: Boolean;
 begin
-	if bTodos then begin
-      frmMain.cdsListaProj.First;
-      frmMain.cdsListaProj.DisableControls;
-      while not frmMain.cdsListaProj.Eof do begin
-         frmMain.cdsListaProj.Edit;
-         frmMain.cdsListaProjSEL.AsBoolean := not frmMain.cdsListaProjSel.AsBoolean;
-         frmMain.cdsListaProj.Post;
+   if not frmMain.cdsListaProj.Active or frmMain.cdsListaProj.IsEmpty then begin
+      Exit;
+   end;
 
-         frmMain.cdsListaProj.Next;
-      end;
-      frmMain.cdsListaProj.First;
-      frmMain.cdsListaProj.EnableControls;
-	end else begin
+   if not bTodos then begin
       frmMain.cdsListaProj.Edit;
       frmMain.cdsListaProjSEL.AsBoolean := not frmMain.cdsListaProjSEL.AsBoolean;
       frmMain.cdsListaProj.Post;
+      Exit;
+   end;
+
+   bSelecionar := False;
+   frmMain.cdsListaProj.First;
+
+   while not frmMain.cdsListaProj.Eof do begin
+      if not frmMain.cdsListaProjSEL.AsBoolean then begin
+         bSelecionar := True;
+         Break;
+      end;
+      frmMain.cdsListaProj.Next;
+   end;
+
+   frmMain.cdsListaProj.DisableControls;
+   try
+      frmMain.cdsListaProj.First;
+      while not frmMain.cdsListaProj.Eof do begin
+         frmMain.cdsListaProj.Edit;
+         frmMain.cdsListaProjSEL.AsBoolean := bSelecionar;
+         frmMain.cdsListaProj.Post;
+         frmMain.cdsListaProj.Next;
+      end;
+      frmMain.cdsListaProj.First;
+   finally
+      frmMain.cdsListaProj.EnableControls;
    end;
 end;
 
 end.
-

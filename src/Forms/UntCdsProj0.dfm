@@ -1,4 +1,4 @@
-object FrmCdsProj0: TFrmCdsProj0
+﻿object FrmCdsProj0: TFrmCdsProj0
   Left = 0
   Top = 0
   Caption = 'Cadastrar Projeto'
@@ -25,7 +25,7 @@ object FrmCdsProj0: TFrmCdsProj0
     Top = 53
     Width = 76
     Height = 15
-    Caption = 'Caminho DCU'
+    Caption = 'Caminho do projeto'
   end
   object btnProcurarProjeto: TSpeedButton
     Left = 459
@@ -105,7 +105,7 @@ object FrmCdsProj0: TFrmCdsProj0
     Top = 80
     Width = 75
     Height = 25
-    Caption = '&Ok'
+    Caption = '&OK'
     TabOrder = 2
     OnClick = btnOkClick
   end

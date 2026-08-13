@@ -1,0 +1,5 @@
+﻿Instalacao concluida.
+
+O LimpaDCU foi instalado com binario e dados separados, e os residuos conhecidos das versoes anteriores foram tratados pelo processo de atualizacao.
+
+Para diagnostico, a barra de status do aplicativo informa versao, arquitetura e configuracao da build.

@@ -1,49 +1,54 @@
-program LimpaDCU;
+﻿program LimpaDCU;
 
 uses
-  Vcl.Forms,
-  System.SysUtils,
-  Vcl.Themes,
-  Vcl.Styles,
-  Winapi.Windows,
-  Winapi.ShlObj,
-  UntMain in 'src\Forms\UntMain.pas' {FrmMain},
-  UntLib in 'src\lib\UntLib.pas',
-  UntTemaAplicacao in 'src\Lib\UntTemaAplicacao.pas',
-  UntDtmCnx in 'src\DataModule\UntDtmCnx.pas' {dtmCnx: TDataModule},
-  UntClassLimpaDcu in 'src\Class\UntClassLimpaDcu.pas',
-  UntCdsProj0 in 'src\Forms\UntCdsProj0.pas' {FrmCdsProj0},
-  UntDlgPadrao in 'src\Forms\UntDlgPadrao.pas' {frmDlgPadrao},
-  UntClassNotificacaoWindows in 'src\Class\UntClassNotificacaoWindows.pas',
-  UntClassDialogos in 'src\Class\UntClassDialogos.pas';
+   Winapi.Windows,
+   WinApi.ShlObj,
+   Vcl.Forms,
+   System.SysUtils,
+   UntClassAplicacao in 'src\Class\UntClassAplicacao.pas',
+   UntClassLog in 'src\Class\UntClassLog.pas',
+   UntClassDialogos in 'src\Class\UntClassDialogos.pas',
+   UntClassNotificacaoWindows in 'src\Class\UntClassNotificacaoWindows.pas',
+   UntClassLimpaDcu in 'src\Class\UntClassLimpaDcu.pas',
+   UntTemaAplicacao in 'src\Class\UntTemaAplicacao.pas',
+   UntDtmCnx in 'src\DataModule\UntDtmCnx.pas' {dtmCnx: TDataModule},
+   UntDlgPadrao in 'src\Forms\UntDlgPadrao.pas' {frmDlgPadrao},
+   UntCdsProj0 in 'src\Forms\UntCdsProj0.pas' {FrmCdsProj0},
+   UntMain in 'src\Forms\UntMain.pas' {FrmMain};
 
 {$R *.res}
 
 begin
-   SetCurrentProcessExplicitAppUserModelID('SucoDev.LimpaDCU');
-   CAMINHO_APL := IncludeTrailingPathDelimiter(ExtractFilePath(Application.ExeName));
-   VERSAO_APL  := VersaoApl;
-   NOME_APL    := ExtractFileName(Application.ExeName);
-   CAMINHO_DB  := CAMINHO_APL + 'database.db';
-   PASTA_CONF  := CAMINHO_APL + 'conf\';
-   PASTA_LOG   := CAMINHO_APL + 'logs\';
-   PASTA_STYLE := CAMINHO_APL + 'styles\';
-
-   if CheckAppRunning(NOME_APL) then begin
-      SetLibraryPath(CAMINHO_APL + 'lib\');
-      if not DirectoryExists(CAMINHO_APL) then CreateDir(CAMINHO_APL);
-      Application.Initialize;
-      Application.Title             := 'Limpa DCU';
-      Application.MainFormOnTaskbar := True;
-
-      Application.CreateForm(TdtmCnx, dtmCnx);
-      dtmCnx.GarantirEstruturaDB;
-
-      tTemaAplicacao.AplicarTemaInicial;
-
-      Application.CreateForm(TFrmMain, FrmMain);
-
-      Application.Run;
+   if tAplicacao.ProcessarModoManutencao then begin
+      Exit;
    end;
-end.
 
+   SetCurrentProcessExplicitAppUserModelID(PChar(tAplicacao.AppUserModelID));
+
+   Application.Initialize;
+   Application.MainFormOnTaskbar := True;
+   Application.Title := tAplicacao.Nome;
+
+   try
+      if not tAplicacao.Inicializar then begin
+         tDialogos.AplicacaoJaEmExecucao;
+         Exit;
+      end;
+
+      Application.CreateForm(tDtmCnx, dtmCnx);
+      dtmCnx.GarantirEstruturaDB;
+      tTemaAplicacao.AplicarTemaInicial;
+      Application.CreateForm(TFrmMain, FrmMain);
+      Application.Run;
+   except
+      on E: Exception do begin
+         tDialogos.Erro(
+            'O LimpaDCU encontrou um erro durante a inicialização.',
+            'Falha ao iniciar',
+            E.ClassName + ': ' + E.Message
+            );
+      end;
+   end;
+
+   tAplicacao.Finalizar;
+end.

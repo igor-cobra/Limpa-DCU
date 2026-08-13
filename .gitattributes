@@ -1,2 +1,33 @@
-# Auto detect text files and perform LF normalization
 * text=auto
+
+# Delphi / Windows
+*.pas   text eol=crlf
+*.dpr   text eol=crlf
+*.dpk   text eol=crlf
+*.inc   text eol=crlf
+*.dfm   text eol=crlf
+*.dproj text eol=crlf
+*.ps1   text eol=crlf
+*.iss   text eol=crlf
+*.txt   text eol=crlf
+
+# Documentação e metadados de repositório
+*.md            text eol=lf
+*.yml           text eol=lf
+*.yaml          text eol=lf
+*.json          text eol=lf
+.editorconfig   text eol=lf
+.gitattributes  text eol=lf
+.gitignore      text eol=lf
+
+# Binários
+*.ico binary
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.zip binary
+*.7z binary
+*.exe binary
+*.dll binary
+*.bpl binary
+*.res binary

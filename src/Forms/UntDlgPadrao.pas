@@ -1,4 +1,4 @@
-unit UntDlgPadrao;
+﻿unit UntDlgPadrao;
 
 interface
 
@@ -72,9 +72,6 @@ implementation
 
 uses
    UntTemaAplicacao;
-
-var
-   frmDlgPadrao: tFrmDlgPadrao;
 
 {$R *.dfm}
 
@@ -262,7 +259,7 @@ begin
    end;
 
    if bdpNao in FConfig.Botoes then begin
-      AdicionarBotao('&N�o', mrNo, FConfig.BotaoPadrao = mrNo, True);
+      AdicionarBotao('&Não', mrNo, FConfig.BotaoPadrao = mrNo, True);
    end;
 
    if bdpCancelar in FConfig.Botoes then begin
