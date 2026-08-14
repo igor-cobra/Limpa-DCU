@@ -44,6 +44,7 @@ $Required = @(
    'README.md',
    'installer\README.md',
    'scripts\README.md',
+   'scripts\RadStudio.ps1',
    'docs\EDITORCONFIG_E_FORMATTER.md',
    'docs\IDENTIDADE_VISUAL.md',
    'assets\icons\LimpaDCU.ico',
@@ -67,26 +68,107 @@ foreach ($Relative in $Required) {
 }
 
 [xml]$ProjectXml = Get-Content -LiteralPath $Project -Raw
-$ProjectRaw = Get-Content -LiteralPath $Project -Raw
 
-$Rules = @(
-   '<Config Condition="''$(Config)''==''''">Debug</Config>',
-   '<Platform Condition="''$(Platform)''==''''">Win32</Platform>',
-   '<DCC_DcuOutput>build\dcu\$(Platform)\$(Config)\</DCC_DcuOutput>',
-   '<DCC_ExeOutput>bin\$(Platform)\$(Config)\</DCC_ExeOutput>',
-   '<UsePackages>true</UsePackages>',
-   '<UsePackages>false</UsePackages>',
-   '<None Include="LimpaDCU.res">',
-   '<None Include=".editorconfig"/>',
-   '<None Include="README.md"/>',
-   '<None Include="docs\EDITORCONFIG_E_FORMATTER.md"/>',
-   '<None Include="docs\IDENTIDADE_VISUAL.md"/>',
-   '<Custom_Styles>&quot;Aqua Light Slate|VCLSTYLE|$(BDSCOMMONDIR)\Styles\AquaLightSlate.vsf&quot;;Glow|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Glow.vsf</Custom_Styles>'
-)
+$Namespace = New-Object System.Xml.XmlNamespaceManager($ProjectXml.NameTable)
+$Namespace.AddNamespace('msb', 'http://schemas.microsoft.com/developer/msbuild/2003')
 
-foreach ($Rule in $Rules) {
-   if (-not $ProjectRaw.Contains($Rule)) {
-      throw "Regra ausente no LimpaDCU.dproj: $Rule"
+function Get-ProjectNodes([string]$XPath) {
+   return @($ProjectXml.SelectNodes($XPath, $Namespace))
+}
+
+function Assert-ProjectValue {
+   param(
+      [Parameter(Mandatory)]
+      [string]$XPath,
+
+      [Parameter(Mandatory)]
+      [string]$Expected,
+
+      [Parameter(Mandatory)]
+      [string]$Description
+   )
+
+   $Found = Get-ProjectNodes $XPath |
+      Where-Object {
+         $_.InnerText.Trim() -eq $Expected
+      }
+
+   if (-not $Found) {
+      throw "Regra ausente no LimpaDCU.dproj: $Description"
+   }
+}
+
+function Assert-ProjectInclude {
+   param(
+      [Parameter(Mandatory)]
+      [string]$Include
+   )
+
+   $Found = Get-ProjectNodes '//msb:None' |
+      Where-Object {
+         $_.GetAttribute('Include') -eq $Include
+      }
+
+   if (-not $Found) {
+      throw "Arquivo não está incluído no LimpaDCU.dproj: $Include"
+   }
+}
+
+Assert-ProjectValue `
+   -XPath '//msb:DCC_DcuOutput' `
+   -Expected 'build\dcu\$(Platform)\$(Config)\' `
+   -Description 'DCC_DcuOutput'
+
+Assert-ProjectValue `
+   -XPath '//msb:DCC_ExeOutput' `
+   -Expected 'bin\$(Platform)\$(Config)\' `
+   -Description 'DCC_ExeOutput'
+
+$UsePackages = Get-ProjectNodes '//msb:UsePackages' |
+   ForEach-Object {
+      $_.InnerText.Trim().ToLowerInvariant()
+   }
+
+if ('true' -notin $UsePackages) {
+   throw 'Regra ausente no LimpaDCU.dproj: Debug deve usar Runtime Packages.'
+}
+
+if ('false' -notin $UsePackages) {
+   throw 'Regra ausente no LimpaDCU.dproj: Release não deve usar Runtime Packages.'
+}
+
+foreach ($Include in @(
+   'LimpaDCU.res',
+   '.editorconfig',
+   'README.md',
+   'docs\EDITORCONFIG_E_FORMATTER.md',
+   'docs\IDENTIDADE_VISUAL.md'
+)) {
+   Assert-ProjectInclude -Include $Include
+}
+
+$CustomStyles = Get-ProjectNodes '//msb:Custom_Styles' |
+   ForEach-Object {
+      $_.InnerText.Trim()
+   }
+
+$ExpectedStyles = '"Aqua Light Slate|VCLSTYLE|$(BDSCOMMONDIR)\Styles\AquaLightSlate.vsf";Glow|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Glow.vsf'
+
+if ($ExpectedStyles -notin $CustomStyles) {
+   throw 'Baseline visual ausente no LimpaDCU.dproj: Aqua Light Slate / Glow.'
+}
+
+# Evita versões parcialmente alteradas entre FileVersion e ProductVersion.
+foreach ($VersionKeysNode in (Get-ProjectNodes '//msb:VerInfo_Keys')) {
+   $Keys = $VersionKeysNode.InnerText.Trim()
+
+   $FileVersionMatch = [regex]::Match($Keys, '(?:^|;)FileVersion=([^;]+)')
+   $ProductVersionMatch = [regex]::Match($Keys, '(?:^|;)ProductVersion=([^;]+)')
+
+   if ($FileVersionMatch.Success -and
+       $ProductVersionMatch.Success -and
+       ($FileVersionMatch.Groups[1].Value -ne $ProductVersionMatch.Groups[1].Value)) {
+      throw "Version Info inconsistente no LimpaDCU.dproj: FileVersion=$($FileVersionMatch.Groups[1].Value) / ProductVersion=$($ProductVersionMatch.Groups[1].Value)"
    }
 }
 

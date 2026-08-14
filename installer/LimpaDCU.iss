@@ -77,7 +77,7 @@ Root: HKLM32; Subkey: "Software\SucoDev\LimpaDCU"; ValueType: string; ValueName:
 Filename: "{app}\{#MyAppExeName}"; Description: "Executar {#MyAppName}"; Flags: postinstall nowait skipifsilent runasoriginaluser
 
 [UninstallRun]
-Filename: "{app}\{#MyAppExeName}"; Parameters: "/limpar-legado-usuario"; Flags: runasoriginaluser waituntilterminated skipifdoesntexist
+Filename: "{app}\{#MyAppExeName}"; Parameters: "/limpar-legado-usuario"; RunOnceId: "LimparLegadoUsuario"; Flags: runascurrentuser waituntilterminated skipifdoesntexist
 
 [UninstallDelete]
 Type: filesandordirs; Name: "{commonappdata}\SucoDev\LimpaDCU"

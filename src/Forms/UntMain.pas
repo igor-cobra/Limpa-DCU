@@ -73,6 +73,7 @@ type
       LimpaDcu: TLimpaDcu;
       FApplicationEvents: TApplicationEvents;
       procedure ApplicationActivate(Sender: TObject);
+      procedure AjustarRodape;
       procedure AtualizarEstadoControleTema;
       procedure AplicarTemaTela;
       procedure SolicitarProcessamentoDialogosPendentes;
@@ -102,6 +103,32 @@ uses
 procedure TFrmMain.ApplicationActivate(Sender: TObject);
 begin
    SolicitarProcessamentoDialogosPendentes;
+end;
+
+procedure TFrmMain.AjustarRodape;
+const
+   MARGEM_HORIZONTAL = 20;
+var
+   oCanvas: TControlCanvas;
+   iLarguraVersao: Integer;
+begin
+   if stsRodape.Panels.Count <= STS_VERAPL then begin
+      Exit;
+   end;
+
+   oCanvas := TControlCanvas.Create;
+   try
+      oCanvas.Control := stsRodape;
+      oCanvas.Font.Assign(stsRodape.Font);
+
+      iLarguraVersao :=
+         oCanvas.TextWidth(stsRodape.Panels[STS_VERAPL].Text) +
+         MulDiv(MARGEM_HORIZONTAL, CurrentPPI, 96);
+
+      stsRodape.Panels[STS_VERAPL].Width := iLarguraVersao;
+   finally
+      oCanvas.Free;
+   end;
 end;
 
 procedure TFrmMain.AplicarTemaTela;
@@ -214,6 +241,7 @@ begin
       tAplicacao.ConfiguracaoBuild
       ]);
    stsRodape.Panels[STS_PRJ].Text := 'Projeto atual: ';
+   AjustarRodape;
    mmoLog.Lines.Clear;
 
    LimpaDcu := TLimpaDcu.Create(dtmCnx);
@@ -263,6 +291,7 @@ begin
    inherited;
 
    if Message.SizeType <> SIZE_MINIMIZED then begin
+      AjustarRodape;
       SolicitarProcessamentoDialogosPendentes;
    end;
 end;

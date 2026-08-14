@@ -29,6 +29,18 @@
         <CfgParent>Base</CfgParent>
         <Base>true</Base>
     </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win32' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win32)'!=''">
+        <Cfg_1_Win32>true</Cfg_1_Win32>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
+    <PropertyGroup Condition="('$(Platform)'=='Win64' and '$(Cfg_1)'=='true') or '$(Cfg_1_Win64)'!=''">
+        <Cfg_1_Win64>true</Cfg_1_Win64>
+        <CfgParent>Cfg_1</CfgParent>
+        <Cfg_1>true</Cfg_1>
+        <Base>true</Base>
+    </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Release' or '$(Cfg_2)'!=''">
         <Cfg_2>true</Cfg_2>
         <CfgParent>Base</CfgParent>
@@ -42,13 +54,11 @@
         <Icon_MainIcon>assets\icons\LimpaDCU.ico</Icon_MainIcon>
         <Custom_Styles>&quot;Aqua Light Slate|VCLSTYLE|$(BDSCOMMONDIR)\Styles\AquaLightSlate.vsf&quot;;Glow|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Glow.vsf</Custom_Styles>
         <VerInfo_IncludeVerInfo>true</VerInfo_IncludeVerInfo>
-        <VerInfo_AutoIncVersion>false</VerInfo_AutoIncVersion>
         <VerInfo_MajorVer>2</VerInfo_MajorVer>
         <VerInfo_MinorVer>2</VerInfo_MinorVer>
-        <VerInfo_Release>0</VerInfo_Release>
-        <VerInfo_Build>0</VerInfo_Build>
+        <VerInfo_Release>1</VerInfo_Release>
         <VerInfo_Locale>1046</VerInfo_Locale>
-        <VerInfo_Keys>CompanyName=SucoDev;FileDescription=LimpaDCU;FileVersion=2.2.0.0;InternalName=LimpaDCU;LegalCopyright=;LegalTrademarks=;OriginalFilename=LimpaDCU.exe;ProgramID=SucoDev.LimpaDCU;ProductName=LimpaDCU;ProductVersion=2.2.0.0;Comments=Utilitário de manutenção de artefatos Delphi</VerInfo_Keys>
+        <VerInfo_Keys>CompanyName=SucoDev;FileDescription=LimpaDCU;FileVersion=2.2.1.0;InternalName=LimpaDCU;LegalCopyright=;LegalTrademarks=;OriginalFilename=LimpaDCU.exe;ProgramID=SucoDev.LimpaDCU;ProductName=LimpaDCU;ProductVersion=2.2.1.0;Comments=Utilitário de manutenção de artefatos Delphi</VerInfo_Keys>
         <SanitizedProjectName>LimpaDCU</SanitizedProjectName>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Base_Win32)'!=''">
@@ -71,6 +81,12 @@
         <DCC_RangeChecking>true</DCC_RangeChecking>
         <DCC_IntegerOverflowCheck>true</DCC_IntegerOverflowCheck>
         <DCC_AssertionsAtRuntime>true</DCC_AssertionsAtRuntime>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win32)'!=''">
+        <Manifest_File>(None)</Manifest_File>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Cfg_1_Win64)'!=''">
+        <Manifest_File>(None)</Manifest_File>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Cfg_2)'!=''">
         <BT_BuildType>Release</BT_BuildType>
@@ -130,6 +146,7 @@
         <None Include="docs\MODO_MANUTENCAO.md"/>
         <None Include="docs\MIGRACAO_BASELINE.md"/>
         <None Include="docs\ROADMAP.md"/>
+        <None Include="docs\IDENTIDADE_VISUAL.md"/>
         <None Include="scripts\Build.ps1"/>
         <None Include="scripts\Clean.ps1"/>
         <None Include="scripts\Validate.ps1"/>
@@ -163,6 +180,12 @@
                 <Source>
                     <Source Name="MainSource">LimpaDCU.dpr</Source>
                 </Source>
+                <Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcboffice2k370.bpl">Embarcadero C++Builder Office 2000 Servers Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\bcbofficexp370.bpl">Embarcadero C++Builder Office XP Servers Package</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dcloffice2k370.bpl">Microsoft Office 2000 Sample Automation Server Wrapper Components</Excluded_Packages>
+                    <Excluded_Packages Name="$(BDSBIN)\dclofficexp370.bpl">Microsoft Office XP Sample Automation Server Wrapper Components</Excluded_Packages>
+                </Excluded_Packages>
             </Delphi.Personality>
             <Platforms>
                 <Platform value="Win32">True</Platform>
