@@ -28,7 +28,7 @@ Centralizam diálogos e notificações, incluindo estado pendente enquanto a ins
 
 ### `UntTemaAplicacao`
 
-Centraliza cores e preferência de tema persistida no SQLite.
+Centraliza a preferência de tema persistida no SQLite e a ativação dos VCL Styles históricos (`Aqua Light Slate` e `Glow`). A identidade visual é tratada como baseline e não deve ser alterada por refactors de infraestrutura.
 
 ## Ownership
 

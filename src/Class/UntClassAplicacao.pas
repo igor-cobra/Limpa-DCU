@@ -171,8 +171,6 @@ class function tAplicacao.GarantirDiretorios: Boolean;
 var
    sFallback: string;
 begin
-   Result := False;
-
    if sPastaDados = '' then begin
       sPastaDados := ObterPastaDadosPadrao;
    end;
@@ -413,8 +411,6 @@ begin
    sParametro := LowerCase(Trim(ParamStr(1)));
 
    if sParametro = '/migrar-legado' then begin
-      Result := True;
-
       if GarantirDiretorios and MigrarDadosLegados then begin
          Halt(0);
       end else begin
@@ -423,7 +419,6 @@ begin
    end;
 
    if sParametro = '/limpar-legado-usuario' then begin
-      Result := True;
       LimparLegadoUsuario;
       Halt(0);
    end;

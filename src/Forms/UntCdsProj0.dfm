@@ -25,7 +25,7 @@
     Top = 53
     Width = 76
     Height = 15
-    Caption = 'Caminho do projeto'
+    Caption = 'Caminho DCU'
   end
   object btnProcurarProjeto: TSpeedButton
     Left = 459
@@ -105,7 +105,7 @@
     Top = 80
     Width = 75
     Height = 25
-    Caption = '&OK'
+    Caption = '&Ok'
     TabOrder = 2
     OnClick = btnOkClick
   end

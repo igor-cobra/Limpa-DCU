@@ -4,6 +4,8 @@ uses
    Winapi.Windows,
    WinApi.ShlObj,
    Vcl.Forms,
+   Vcl.Themes,
+   Vcl.Styles,
    System.SysUtils,
    UntClassAplicacao in 'src\Class\UntClassAplicacao.pas',
    UntClassLog in 'src\Class\UntClassLog.pas',

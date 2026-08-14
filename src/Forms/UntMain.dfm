@@ -16,6 +16,7 @@
   Position = poScreenCenter
   OnActivate = FormActivate
   OnCreate = FormCreate
+  OnCloseQuery = FormCloseQuery
   OnDestroy = FormDestroy
   OnKeyDown = FormKeyDown
   OnShow = FormShow
@@ -54,7 +55,7 @@
       Top = 34
       Width = 75
       Height = 25
-      Caption = '&Limpar DCUs'
+      Caption = '&Limpar Dcu''s'
       TabOrder = 0
       OnClick = btnLimparDcuClick
     end

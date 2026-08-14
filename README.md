@@ -122,6 +122,14 @@ A instalação utiliza o mesmo banco para Win32 e Win64:
 
 Quando o diretório compartilhado não está disponível em execução de desenvolvimento, existe fallback para `%LOCALAPPDATA%\SucoDev\LimpaDCU`.
 
+## Identidade visual
+
+A baseline mantém os VCL Styles históricos do projeto: **Aqua Light Slate** no modo claro e **Glow** no modo escuro. Eles são declarados no `LimpaDCU.dproj` por `Custom_Styles` e embutidos no executável durante a build.
+
+O ícone oficial também é mantido em `assets\icons\LimpaDCU.ico`. Refactors de arquitetura, build ou instalação não devem alterar tema, layout ou identidade gráfica como efeito colateral.
+
+Veja [docs/IDENTIDADE_VISUAL.md](docs/IDENTIDADE_VISUAL.md).
+
 ## Segurança da limpeza
 
 A rotina continua removendo apenas `*.dcu`.

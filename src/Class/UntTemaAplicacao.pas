@@ -8,7 +8,8 @@ uses
    System.Types,
    System.Win.Registry,
    Vcl.Graphics,
-   Vcl.Themes;
+   Vcl.Themes,
+   Vcl.Styles;
 
 type
    tModoTema = (mtSeguirWindows, mtClaro, mtEscuro);
@@ -17,11 +18,16 @@ type
    private
       class var bTemaEscuro: Boolean;
       class function WindowsUsaTemaClaroApps: Boolean; static;
+      class function CarregarStyle(const sNomeArquivo: string;
+         out aHandle: TStyleManager.TStyleServicesHandle): Boolean; static;
+      class function AplicarStyleArquivo(const sNomeArquivo: string): Boolean; static;
+      class function ObterNomeStyle(const sNomeArquivo: string): string; static;
       class function LerModoSalvo(out aModo: tModoTema): Boolean; static;
       class procedure SalvarModo(const aModo: tModoTema); static;
    public
       class procedure AplicarTemaInicial; static;
-      class procedure Aplicar(aModo: tModoTema; bSalvarPreferencia: Boolean = True); static;
+      class procedure Aplicar(aModo: tModoTema;
+         bSalvarPreferencia: Boolean = True); static;
       class function TemaEscuro: Boolean; static;
       class function CorFundo: TColor; static;
       class function CorFundoAlternado: TColor; static;
@@ -29,7 +35,8 @@ type
       class function CorSelecao: TColor; static;
       class function CorTextoSelecao: TColor; static;
       class function CorEdit: TColor; static;
-      class function ObterDetalhesCheckBox(const bMarcado, bHabilitado: Boolean): TThemedElementDetails; static;
+      class function ObterDetalhesCheckBox(const bMarcado,
+         bHabilitado: Boolean): TThemedElementDetails; static;
       class procedure DesenharCheckBoxGrid(aCanvas: TCanvas; const aRect: TRect;
          const bMarcado, bHabilitado: Boolean); static;
       class procedure PrepararCanvasGrid(aCanvas: TCanvas;
@@ -39,10 +46,18 @@ type
 implementation
 
 uses
-   UntDtmCnx;
+   UntDtmCnx,
+   UntClassAplicacao;
 
 const
    REG_PERSONALIZE = '\Software\Microsoft\Windows\CurrentVersion\Themes\Personalize';
+
+   ARQ_STYLE_CLARO = 'AquaLightSlate.vsf';
+   ARQ_STYLE_ESCURO = 'Glow.vsf';
+
+   NOME_STYLE_CLARO = 'Aqua Light Slate';
+   NOME_STYLE_ESCURO = 'Glow';
+
    CHAVE_CFG_TEMA = 'TEMA';
    CFG_TEMA_CLARO = '0';
    CFG_TEMA_ESCURO = '1';
@@ -50,17 +65,35 @@ const
 class procedure tTemaAplicacao.Aplicar(aModo: tModoTema;
    bSalvarPreferencia: Boolean);
 begin
-   if aModo = mtSeguirWindows then begin
-      if WindowsUsaTemaClaroApps then begin
-         aModo := mtClaro;
-      end else begin
-         aModo := mtEscuro;
-      end;
+   case aModo of
+      mtClaro:
+         begin
+            bTemaEscuro := False;
+            if not AplicarStyleArquivo(ARQ_STYLE_CLARO) then begin
+               TStyleManager.TrySetStyle('Windows');
+            end;
+         end;
+
+      mtEscuro:
+         begin
+            bTemaEscuro := True;
+            if not AplicarStyleArquivo(ARQ_STYLE_ESCURO) then begin
+               TStyleManager.TrySetStyle('Windows');
+            end;
+         end;
+
+      mtSeguirWindows:
+         begin
+            if WindowsUsaTemaClaroApps then begin
+               Aplicar(mtClaro, bSalvarPreferencia);
+            end else begin
+               Aplicar(mtEscuro, bSalvarPreferencia);
+            end;
+            Exit;
+         end;
    end;
 
-   bTemaEscuro := aModo = mtEscuro;
-
-   if bSalvarPreferencia then begin
+   if bSalvarPreferencia and (aModo in [mtClaro, mtEscuro]) then begin
       SalvarModo(aModo);
    end;
 end;
@@ -70,10 +103,74 @@ var
    aModo: tModoTema;
 begin
    if not LerModoSalvo(aModo) then begin
-      aModo := mtSeguirWindows;
+      if WindowsUsaTemaClaroApps then begin
+         aModo := mtClaro;
+      end else begin
+         aModo := mtEscuro;
+      end;
+
+      Aplicar(aModo, True);
+      Exit;
    end;
 
    Aplicar(aModo, False);
+end;
+
+class function tTemaAplicacao.AplicarStyleArquivo(
+   const sNomeArquivo: string): Boolean;
+var
+   aHandle: TStyleManager.TStyleServicesHandle;
+   sNomeStyle: string;
+begin
+   Result := False;
+   sNomeStyle := ObterNomeStyle(sNomeArquivo);
+
+   // A primeira opção é o style embutido pelo Custom_Styles do .dproj.
+   // Assim a identidade visual não depende de arquivos .vsf ao lado do EXE.
+   if (sNomeStyle <> '') and TStyleManager.TrySetStyle(sNomeStyle, False) then begin
+      Result := True;
+      Exit;
+   end;
+
+   // Mantém compatibilidade com instalações antigas que distribuíam os VSFs.
+   try
+      if not CarregarStyle(sNomeArquivo, aHandle) then begin
+         Exit;
+      end;
+
+      TStyleManager.SetStyle(aHandle);
+      Result := True;
+   except
+      on EDuplicateStyleException do begin
+         Result := (sNomeStyle <> '') and
+            TStyleManager.TrySetStyle(sNomeStyle, False);
+      end;
+      else begin
+         Result := False;
+      end;
+   end;
+end;
+
+class function tTemaAplicacao.CarregarStyle(const sNomeArquivo: string;
+   out aHandle: TStyleManager.TStyleServicesHandle): Boolean;
+var
+   sArquivo: string;
+begin
+   Result := False;
+   aHandle := Default(TStyleManager.TStyleServicesHandle);
+
+   sArquivo := tAplicacao.CaminhoAplicacao + 'styles\' + sNomeArquivo;
+
+   if not FileExists(sArquivo) then begin
+      Exit;
+   end;
+
+   if not TStyleManager.IsValidStyle(sArquivo) then begin
+      Exit;
+   end;
+
+   aHandle := TStyleManager.LoadFromFile(sArquivo);
+   Result := aHandle <> nil;
 end;
 
 class function tTemaAplicacao.CorEdit: TColor;
@@ -128,19 +225,31 @@ var
    aDetalhes: TThemedElementDetails;
    aTamanho: TSize;
    aRectCheck: TRect;
+   iLargura: Integer;
+   iAltura: Integer;
    iEsquerda: Integer;
    iTopo: Integer;
 begin
    aDetalhes := ObterDetalhesCheckBox(bMarcado, bHabilitado);
 
-   if not StyleServices.GetElementSize(aCanvas.Handle, aDetalhes, esActual, aTamanho) then begin
+   if not StyleServices.GetElementSize(aCanvas.Handle, aDetalhes, esActual,
+      aTamanho) then begin
       aTamanho.cx := 13;
       aTamanho.cy := 13;
    end;
 
-   iEsquerda := aRect.Left + ((aRect.Width - aTamanho.cx) div 2);
-   iTopo := aRect.Top + ((aRect.Height - aTamanho.cy) div 2);
-   aRectCheck := Rect(iEsquerda, iTopo, iEsquerda + aTamanho.cx, iTopo + aTamanho.cy);
+   iLargura := aTamanho.cx;
+   iAltura := aTamanho.cy;
+   iEsquerda := aRect.Left + ((aRect.Width - iLargura) div 2);
+   iTopo := aRect.Top + ((aRect.Height - iAltura) div 2);
+
+   aRectCheck := Rect(
+      iEsquerda,
+      iTopo,
+      iEsquerda + iLargura,
+      iTopo + iAltura
+      );
+
    StyleServices.DrawElement(aCanvas.Handle, aDetalhes, aRectCheck);
 end;
 
@@ -184,6 +293,17 @@ begin
    end;
 end;
 
+class function tTemaAplicacao.ObterNomeStyle(const sNomeArquivo: string): string;
+begin
+   if SameText(sNomeArquivo, ARQ_STYLE_CLARO) then begin
+      Result := NOME_STYLE_CLARO;
+   end else if SameText(sNomeArquivo, ARQ_STYLE_ESCURO) then begin
+      Result := NOME_STYLE_ESCURO;
+   end else begin
+      Result := ChangeFileExt(ExtractFileName(sNomeArquivo), '');
+   end;
+end;
+
 class procedure tTemaAplicacao.PrepararCanvasGrid(aCanvas: TCanvas;
    const bSelecionado, bLinhaPar: Boolean);
 begin
@@ -196,6 +316,7 @@ begin
       end else begin
          aCanvas.Brush.Color := CorFundo;
       end;
+
       aCanvas.Font.Color := CorTexto;
    end;
 end;
@@ -227,6 +348,7 @@ begin
    aReg := TRegistry.Create(KEY_READ);
    try
       aReg.RootKey := HKEY_CURRENT_USER;
+
       if aReg.OpenKeyReadOnly(REG_PERSONALIZE) and
          aReg.ValueExists('AppsUseLightTheme') then begin
          Result := aReg.ReadInteger('AppsUseLightTheme') <> 0;

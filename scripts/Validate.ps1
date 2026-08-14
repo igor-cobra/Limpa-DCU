@@ -45,6 +45,8 @@ $Required = @(
    'installer\README.md',
    'scripts\README.md',
    'docs\EDITORCONFIG_E_FORMATTER.md',
+   'docs\IDENTIDADE_VISUAL.md',
+   'assets\icons\LimpaDCU.ico',
    'CONTRIBUTING.md',
    'CHANGELOG.md',
    'src\Class\UntClassAplicacao.pas',
@@ -74,16 +76,42 @@ $Rules = @(
    '<DCC_ExeOutput>bin\$(Platform)\$(Config)\</DCC_ExeOutput>',
    '<UsePackages>true</UsePackages>',
    '<UsePackages>false</UsePackages>',
-   '<None Include="LimpaDCU.res" />',
-   '<None Include=".editorconfig" />',
-   '<None Include="README.md" />',
-   '<None Include="docs\EDITORCONFIG_E_FORMATTER.md" />'
+   '<None Include="LimpaDCU.res">',
+   '<None Include=".editorconfig"/>',
+   '<None Include="README.md"/>',
+   '<None Include="docs\EDITORCONFIG_E_FORMATTER.md"/>',
+   '<None Include="docs\IDENTIDADE_VISUAL.md"/>',
+   '<Custom_Styles>&quot;Aqua Light Slate|VCLSTYLE|$(BDSCOMMONDIR)\Styles\AquaLightSlate.vsf&quot;;Glow|VCLSTYLE|$(BDSCOMMONDIR)\Styles\Glow.vsf</Custom_Styles>'
 )
 
 foreach ($Rule in $Rules) {
    if (-not $ProjectRaw.Contains($Rule)) {
       throw "Regra ausente no LimpaDCU.dproj: $Rule"
    }
+}
+
+
+$ThemeSource = Get-Content -LiteralPath (Join-Path $Root 'src\Class\UntTemaAplicacao.pas') -Raw
+$ThemeRules = @(
+   'Vcl.Styles',
+   'AquaLightSlate.vsf',
+   'Glow.vsf',
+   'TStyleManager.TrySetStyle'
+)
+
+foreach ($ThemeRule in $ThemeRules) {
+   if (-not $ThemeSource.Contains($ThemeRule)) {
+      throw "Baseline visual ausente em UntTemaAplicacao.pas: $ThemeRule"
+   }
+}
+
+
+$IconPath = Join-Path $Root 'assets\icons\LimpaDCU.ico'
+$IconHashEsperado = '0B7ECA4214FD5B06B348110093F349A79C433A02D93122853DE4389697795CBF'
+$IconHashAtual = (Get-FileHash -LiteralPath $IconPath -Algorithm SHA256).Hash
+
+if ($IconHashAtual -ne $IconHashEsperado) {
+   throw "O ícone oficial do LimpaDCU foi alterado. SHA256 atual: $IconHashAtual"
 }
 
 $SourceFiles = Get-ChildItem -Path (Join-Path $Root 'src') -Recurse -File -Include *.pas,*.dfm

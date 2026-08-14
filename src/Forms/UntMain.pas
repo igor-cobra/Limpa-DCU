@@ -4,11 +4,13 @@ interface
 
 uses
    Winapi.Windows,
+   Winapi.Messages,
    System.Classes,
    System.SysUtils,
    Vcl.Graphics,
    Vcl.Controls,
    Vcl.Forms,
+   Vcl.AppEvnts,
    Vcl.ComCtrls,
    Vcl.Grids,
    Vcl.DBGrids,
@@ -28,6 +30,9 @@ uses
    FireDAC.Comp.DataSet,
    FireDAC.Comp.Client,
    UntClassLimpaDcu;
+
+const
+   WM_LIMPADCU_PROCESSAR_DIALOGOS = WM_APP + 101;
 
 type
    TAuxDBGrid = class(TDBGrid);
@@ -53,6 +58,7 @@ type
       procedure FormActivate(Sender: TObject);
       procedure FormCreate(Sender: TObject);
       procedure FormDestroy(Sender: TObject);
+      procedure FormCloseQuery(Sender: TObject; var CanClose: Boolean);
       procedure FormShow(Sender: TObject);
       procedure btnCadastrarClick(Sender: TObject);
       procedure btnExcluirProjetoClick(Sender: TObject);
@@ -65,8 +71,14 @@ type
       procedure tlgModoEscuroClick(Sender: TObject);
    private
       LimpaDcu: TLimpaDcu;
+      FApplicationEvents: TApplicationEvents;
+      procedure ApplicationActivate(Sender: TObject);
       procedure AtualizarEstadoControleTema;
       procedure AplicarTemaTela;
+      procedure SolicitarProcessamentoDialogosPendentes;
+      procedure WMProcessarDialogosPendentes(var Message: TMessage);
+         message WM_LIMPADCU_PROCESSAR_DIALOGOS;
+      procedure WMSize(var Message: TWMSize); message WM_SIZE;
    end;
 
 var
@@ -87,19 +99,29 @@ uses
 
 {$R *.dfm}
 
+procedure TFrmMain.ApplicationActivate(Sender: TObject);
+begin
+   SolicitarProcessamentoDialogosPendentes;
+end;
+
 procedure TFrmMain.AplicarTemaTela;
 begin
    Color := tTemaAplicacao.CorFundo;
    Font.Color := tTemaAplicacao.CorTexto;
+
    pnlTop.ParentBackground := False;
    pnlTop.Color := tTemaAplicacao.CorFundo;
-   pnlBottom.ParentBackground := False;
-   pnlBottom.Color := tTemaAplicacao.CorFundo;
+
    mmoLog.Color := tTemaAplicacao.CorEdit;
    mmoLog.Font.Color := tTemaAplicacao.CorTexto;
-   lblModoEscuro.Font.Color := tTemaAplicacao.CorTexto;
-   lblLogRegistros.Font.Color := tTemaAplicacao.CorTexto;
+
+   if Assigned(lblModoEscuro) then begin
+      lblModoEscuro.Font.Color := tTemaAplicacao.CorTexto;
+   end;
+
    dbgListaProj.Invalidate;
+   mmoLog.Invalidate;
+   pnlTop.Invalidate;
    Invalidate;
 end;
 
@@ -168,7 +190,20 @@ end;
 
 procedure TFrmMain.FormActivate(Sender: TObject);
 begin
-   tDialogos.ProcessarDialogosPendentes;
+   SolicitarProcessamentoDialogosPendentes;
+end;
+
+procedure TFrmMain.FormCloseQuery(Sender: TObject; var CanClose: Boolean);
+begin
+   CanClose := not Assigned(LimpaDcu) or not LimpaDcu.EmProcessamento;
+
+   if not CanClose then begin
+      tDialogos.Aviso(
+         'A limpeza dos DCUs ainda está em andamento.',
+         'Limpeza em andamento',
+         'A janela pode ser minimizada normalmente. Aguarde a conclusão antes de encerrar o LimpaDCU.'
+         );
+   end;
 end;
 
 procedure TFrmMain.FormCreate(Sender: TObject);
@@ -185,6 +220,9 @@ begin
    AtualizarEstadoControleTema;
    AplicarTemaTela;
    tNotificacaoWindows.Inicializar;
+
+   FApplicationEvents := TApplicationEvents.Create(Self);
+   FApplicationEvents.OnActivate := ApplicationActivate;
 end;
 
 procedure TFrmMain.FormDestroy(Sender: TObject);
@@ -202,6 +240,31 @@ end;
 procedure TFrmMain.FormShow(Sender: TObject);
 begin
    LimpaDcu.CarregarProjetos;
+end;
+
+procedure TFrmMain.SolicitarProcessamentoDialogosPendentes;
+begin
+   if HandleAllocated then begin
+      PostMessage(Handle, WM_LIMPADCU_PROCESSAR_DIALOGOS, 0, 0);
+   end;
+end;
+
+procedure TFrmMain.WMProcessarDialogosPendentes(var Message: TMessage);
+begin
+   if not Visible or (WindowState = wsMinimized) then begin
+      Exit;
+   end;
+
+   tDialogos.ProcessarDialogosPendentes;
+end;
+
+procedure TFrmMain.WMSize(var Message: TWMSize);
+begin
+   inherited;
+
+   if Message.SizeType <> SIZE_MINIMIZED then begin
+      SolicitarProcessamentoDialogosPendentes;
+   end;
 end;
 
 procedure TFrmMain.tlgModoEscuroClick(Sender: TObject);

@@ -29,8 +29,11 @@ type
       class procedure RegistrarDialogoPendente(const sIdentificador: string;
          const aConfig: tConfigDialogoProjeto); static;
       class procedure RemoverDialogoPendente(const sIdentificador: string); static;
-      class procedure AgendarExibicaoDialogo(const aConfig: tConfigDialogoProjeto); static;
-      class procedure ExibirDialogoPendente(const sIdentificador: string); static;
+      class procedure AgendarExibicaoDialogo(const aConfig: tConfigDialogoProjeto;
+         bForcarFoco: Boolean = False); static;
+      class procedure ExibirDialogoPendente(const sIdentificador: string;
+         bForcarFoco: Boolean = False); static;
+      class procedure ForcarFocoAplicacao; static;
    public
       class procedure Aviso(const sTexto: string; const sCabecalho: string = 'Atenção';
          const sDetalhes: string = ''; const sRodape: string = '';
@@ -62,7 +65,7 @@ uses
    UntClassNotificacaoWindows;
 
 class procedure tDialogos.AgendarExibicaoDialogo(
-   const aConfig: tConfigDialogoProjeto);
+   const aConfig: tConfigDialogoProjeto; bForcarFoco: Boolean);
 begin
    TThread.ForceQueue(nil,
       procedure
@@ -75,11 +78,12 @@ begin
             end;
 
             Application.MainForm.Show;
-            Application.MainForm.BringToFront;
-            SetForegroundWindow(Application.MainForm.Handle);
+
+            if bForcarFoco then begin
+               ForcarFocoAplicacao;
+            end;
          end;
 
-         Application.BringToFront;
          tFrmDlgPadrao.Executar(aConfig);
       end
       );
@@ -166,7 +170,8 @@ begin
    ExecutarInterno(aConfig, bNotificarSeSemFoco, 'ERRO');
 end;
 
-class procedure tDialogos.ExibirDialogoPendente(const sIdentificador: string);
+class procedure tDialogos.ExibirDialogoPendente(const sIdentificador: string;
+   bForcarFoco: Boolean);
 var
    aDialogoPendente: tDialogoPendente;
    aConfig: tConfigDialogoProjeto;
@@ -184,7 +189,7 @@ begin
       aConfig := aDialogoPendente.Config;
       aDialogosPendentes.Remove(sIdentificador);
       tNotificacaoWindows.Cancelar(sIdentificador);
-      AgendarExibicaoDialogo(aConfig);
+      AgendarExibicaoDialogo(aConfig, bForcarFoco);
    end else if aDialogosPendentes.Count > 0 then begin
       ProcessarDialogosPendentes;
    end;
@@ -220,6 +225,57 @@ begin
    end;
 end;
 
+class procedure tDialogos.ForcarFocoAplicacao;
+var
+   hJanela: HWND;
+   hJanelaForeground: HWND;
+   iThreadAtual: DWORD;
+   iThreadForeground: DWORD;
+   bThreadsAnexadas: Boolean;
+begin
+   if not Assigned(Application.MainForm) then begin
+      Exit;
+   end;
+
+   hJanela := Application.MainForm.Handle;
+   if hJanela = 0 then begin
+      Exit;
+   end;
+
+   if IsIconic(hJanela) then begin
+      ShowWindow(hJanela, SW_RESTORE);
+   end else begin
+      ShowWindow(hJanela, SW_SHOW);
+   end;
+
+   hJanelaForeground := GetForegroundWindow;
+   iThreadAtual := GetCurrentThreadId;
+   iThreadForeground := 0;
+   bThreadsAnexadas := False;
+
+   if (hJanelaForeground <> 0) and (hJanelaForeground <> hJanela) then begin
+      iThreadForeground := GetWindowThreadProcessId(hJanelaForeground, nil);
+
+      if (iThreadForeground <> 0) and (iThreadForeground <> iThreadAtual) then begin
+         bThreadsAnexadas := AttachThreadInput(iThreadAtual, iThreadForeground, True);
+      end;
+   end;
+
+   try
+      SetWindowPos(hJanela, HWND_TOP, 0, 0, 0, 0,
+         SWP_NOMOVE or SWP_NOSIZE or SWP_SHOWWINDOW);
+      BringWindowToTop(hJanela);
+      SetForegroundWindow(hJanela);
+      SetActiveWindow(hJanela);
+      Application.MainForm.BringToFront;
+      Application.BringToFront;
+   finally
+      if bThreadsAnexadas then begin
+         AttachThreadInput(iThreadAtual, iThreadForeground, False);
+      end;
+   end;
+end;
+
 class function tDialogos.GerarIdentificadorNotificacao(
    const sPrefixo: string): string;
 var
@@ -244,7 +300,7 @@ begin
       tNotificacaoWindows.DefinirAcaoClique(
          procedure(const sIdentificador: string)
          begin
-            ExibirDialogoPendente(sIdentificador);
+            ExibirDialogoPendente(sIdentificador, True);
          end
          );
       bControleNotificacaoInicializado := True;
@@ -329,17 +385,28 @@ end;
 class procedure tDialogos.ResumoLimpeza(iProjetos, iArquivos,
    iFalhas: Integer);
 var
+   sDetalhes: string;
+   sRodape: string;
    sTexto: string;
 begin
-   sTexto := Format('Projetos processados: %d%sArquivos excluídos: %d%sFalhas: %d', [
+   sTexto := 'Processo de exclusão dos DCUs concluído.';
+   sDetalhes := Format(
+      'Projetos processados: %d%sArquivos removidos: %d%sFalhas encontradas: %d', [
       iProjetos,
       sLineBreak,
       iArquivos,
       sLineBreak,
       iFalhas
-      ]);
+      ]
+      );
 
-   Informacao(sTexto, 'Processo finalizado', '', '', True);
+   if iFalhas > 0 then begin
+      sRodape := 'Confira o log para localizar os arquivos que não puderam ser removidos.';
+   end else begin
+      sRodape := 'Nenhuma falha foi identificada nesta execução.';
+   end;
+
+   Informacao(sTexto, 'Limpeza finalizada', sDetalhes, sRodape, True);
 end;
 
 initialization
